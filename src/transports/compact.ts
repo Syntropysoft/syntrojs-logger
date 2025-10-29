@@ -22,20 +22,34 @@ export class CompactTransport extends Transport {
     };
   }
 
-  log(entry: LogEntry): void {
-    if (!this.isLevelEnabled(entry.level)) {
+  log(entry: LogEntry | string): void {
+    let logEntry: LogEntry;
+    
+    if (typeof entry === 'string') {
+      try {
+        logEntry = JSON.parse(entry);
+      } catch {
+        console.log(entry);
+        return;
+      }
+    } else {
+      logEntry = entry;
+    }
+    
+    if (!this.isLevelEnabled(logEntry.level)) {
       return;
     }
 
-    const { timestamp, level, message, service, ...rest } = entry;
+    const timestamp = (logEntry as any).time || logEntry.timestamp;
+    const { level, message, service, time: _, timestamp: __, ...rest } = logEntry;
     
     const colorizer = this.levelColorMap[level as Exclude<LogLevel, 'silent'>] || chalk.white;
     
-    const time = chalk.gray(new Date(timestamp).toLocaleTimeString());
+    const timeStr = chalk.gray(`[${new Date(timestamp).toISOString()}]`);
     const levelString = colorizer(`[${level.toUpperCase()}]`);
     const serviceString = service ? chalk.blue(`(${service})`) : '';
     
-    let logString = `${time} ${levelString} ${serviceString}: ${message}`;
+    let logString = `${timeStr} ${levelString} ${serviceString}: ${message}`;
     
     // Add metadata on same line
     const metaKeys = Object.keys(rest);

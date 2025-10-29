@@ -1,21 +1,41 @@
 # @syntrojs/logger
 
-🔥 Fast, simple, and developer-friendly logger for Node.js and Bun
+🔥 **Standalone logger** - Fast, simple, and developer-friendly logger for Node.js and Bun
+
+**Works perfectly on its own** or seamlessly integrates with [SyntroJS](https://github.com/Syntropysoft/sintrojs).
 
 ## Features
 
-- ⚡ **Blazing fast** - Minimal overhead, optimized for performance
+- ⚡ **Blazing fast** - Optimized for performance (~75% of Pino's speed, 1M+ ops/sec)
 - 🎨 **Beautiful output** - Four transport options: JSON, Pretty, Compact, and Classic
 - 🔧 **Type-safe** - Full TypeScript support
-- 🪶 **Lightweight** - Single dependency (chalk for colors only)
+- 🪶 **Lightweight** - Minimal dependencies (chalk for colors only)
 - 🎯 **Simple API** - Inspired by Pino, even more lightweight
 - 🌟 **Flexible** - Child loggers, custom transports (OpenTelemetry, files, HTTP, etc.)
+- ⚙️ **Production-ready** - JSON logging with ISO timestamps, buffering, and zero overhead
 
 ## Installation
 
 ```bash
 npm install @syntrojs/logger
 ```
+
+## Usage
+
+### Standalone (Any Node.js/Bun Project)
+
+Use `@syntrojs/logger` in **any project** - it's completely independent:
+
+```typescript
+import { createLogger } from '@syntrojs/logger';
+
+const logger = createLogger({ name: 'my-app' });
+logger.info('Hello, world!');
+```
+
+### With SyntroJS
+
+When used with [SyntroJS](https://github.com/Syntropysoft/sintrojs), the logger is automatically configured with request context, correlation IDs, and structured logging.
 
 ## Quick Start
 
@@ -48,8 +68,10 @@ const logger = createLogger({
 });
 
 logger.info({ method: 'GET', path: '/users' }, 'Request received');
-// Output: {"timestamp":"2024-01-01T12:00:00.000Z","level":"info","message":"Request received","service":"my-api","method":"GET","path":"/users"}
+// Output: {"time":"2025-01-01T12:00:00.000Z","level":"info","message":"Request received","service":"my-api","method":"GET","path":"/users"}
 ```
+
+> **Performance**: Uses ISO timestamps for clarity and compatibility. Works seamlessly with all log aggregation systems.
 
 ### Development (Pretty colors)
 
@@ -61,6 +83,36 @@ const logger = createLogger({
   level: 'debug',
   transport: 'pretty' // default
 });
+
+logger.info({ userId: 123, action: 'login' }, 'User logged in');
+```
+
+**Output:**
+```
+[2025-01-01T12:00:00.000Z] [INFO] (dev-server): User logged in
+{
+  "userId": 123,
+  "action": "login"
+}
+```
+
+### Compact Format
+
+```typescript
+import { createLogger } from '@syntrojs/logger';
+
+const logger = createLogger({
+  name: 'api',
+  level: 'info',
+  transport: 'compact'
+});
+
+logger.info('Request processed', { statusCode: 200, latency: 45 });
+```
+
+**Output:**
+```
+[2025-01-01T12:00:00.000Z] [INFO] (ci-pipeline): Request processed | statusCode=200 latency=45
 ```
 
 ### Classic Style (Log4j-style)
@@ -71,8 +123,15 @@ import { createLogger } from '@syntrojs/logger';
 const logger = createLogger({
   name: 'api',
   level: 'info',
-  transport: 'classic' // Traditional single-line format
+  transport: 'classic'
 });
+
+logger.error('Database connection failed', { host: 'localhost', port: 5432 });
+```
+
+**Output:**
+```
+[2025-01-01T12:00:00.000Z] ERROR [api] - Database connection failed [host="localhost" port=5432]
 ```
 
 ### Child Loggers
@@ -136,26 +195,106 @@ logger.info('User %s logged in', 'John');
 logger.info({ userId: 123 }, 'User %s logged in', 'John');
 ```
 
+## Transport Options
+
+Choose the transport format that best fits your needs:
+
+| Transport | Use Case | Format |
+|-----------|----------|--------|
+| `'json'` | Production, Log aggregation | ISO timestamp JSON |
+| `'pretty'` | Development, Debugging | Colored with ISO timestamps |
+| `'compact'` | Terminals, CI/CD | Single-line ISO format |
+| `'classic'` | Traditional apps | ISO timestamp Log4j-style |
+
+### Multiple Outputs (Composite Transport)
+
+Send logs to multiple destinations simultaneously:
+
+```typescript
+import { createLogger } from '@syntrojs/logger';
+import { JsonTransport, PrettyTransport, ClassicTransport, CompositeTransport } from '@syntrojs/logger';
+
+const logger = createLogger({
+  name: 'my-app',
+  transport: new CompositeTransport([
+    new JsonTransport(),  // To file / aggregation
+    new PrettyTransport()  // To console (dev)
+  ])
+});
+
+logger.info('This appears in both JSON and pretty format');
+```
+
 ## Custom Transports
 
-Extend the `Transport` class to send logs anywhere (files, OpenTelemetry, HTTP, etc.):
+Extend the `Transport` class to send logs anywhere. Here are practical examples:
+
+### File Transport Example
 
 ```typescript
 import { Transport, type LogEntry } from '@syntrojs/logger';
+import * as fs from 'node:fs';
 
 class FileTransport extends Transport {
+  private logFile: string;
+
+  constructor(options?: { filename?: string }) {
+    super();
+    this.logFile = options?.filename || './logs/app.log';
+  }
+
   log(entry: LogEntry): void {
-    // Write to file
-    fs.appendFile('./logs/app.log', JSON.stringify(entry));
+    const line = JSON.stringify(entry) + '\n';
+    fs.appendFileSync(this.logFile, line);
   }
 }
 
 const logger = createLogger({
-  transport: new FileTransport()
+  name: 'my-app',
+  transport: new FileTransport({ filename: './logs/app.jsonl' })
 });
 ```
 
-See [CUSTOM_TRANSPORTS.md](./CUSTOM_TRANSPORTS.md) for complete examples including OpenTelemetry, HTTP webhooks, and composite transports.
+### HTTP Webhook Example
+
+```typescript
+class WebhookTransport extends Transport {
+  private url: string;
+
+  constructor(url: string) {
+    super();
+    this.url = url;
+  }
+
+  log(entry: LogEntry): void {
+    // Send to webhook (don't await to avoid blocking)
+    fetch(this.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry)
+    }).catch(err => console.error('Failed to send log:', err));
+  }
+}
+
+const logger = createLogger({
+  transport: new WebhookTransport('https://logs.example.com/webhook')
+});
+```
+
+### Multiple Destinations
+
+```typescript
+const logger = createLogger({
+  name: 'my-app',
+  transport: new CompositeTransport([
+    new JsonTransport(),           // Console (JSON)
+    new FileTransport(),            // File
+    new WebhookTransport(url)      // External service
+  ])
+});
+```
+
+See [CUSTOM_TRANSPORTS.md](./CUSTOM_TRANSPORTS.md) for more examples including OpenTelemetry, databases, and message queues.
 
 ## License
 

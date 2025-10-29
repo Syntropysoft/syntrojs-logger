@@ -108,8 +108,8 @@ export class Logger {
     
     // Fast path: No context, no bindings, no metadata - just core fields
     if (!hasContext && !hasBindings && !hasMetadata) {
-      const time = Date.now();
-      const json = `{"time":${time},"level":"${level}","message":${JSON.stringify(message)},"service":"${this.serviceName}"}`;
+      const time = new Date().toISOString();
+      const json = `{"time":"${time}","level":"${level}","message":${JSON.stringify(message)},"service":"${this.serviceName}"}`;
       try {
         this.transport.log(json);
       } catch (error) {
@@ -119,13 +119,13 @@ export class Logger {
     }
     
     // Pino-style: Build JSON string manually - minimal object creation!
-    const time = Date.now(); // Use milliseconds since epoch (faster than toISOString)
+    const time = new Date().toISOString(); // Use ISO string for clarity
     const levelStr = `"${level}"`;
     const msgStr = JSON.stringify(message);
     const serviceStr = `"${this.serviceName}"`;
     
     // Start with required fields - no spread, no object creation
-    let json = `{"time":${time},"level":${levelStr},"message":${msgStr},"service":${serviceStr}`;
+    let json = `{"time":"${time}","level":${levelStr},"message":${msgStr},"service":${serviceStr}`;
     
     // Add async context fields inline - no function call overhead
     if (hasContext) {

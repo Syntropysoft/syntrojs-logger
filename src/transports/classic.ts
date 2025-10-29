@@ -22,23 +22,31 @@ export class ClassicTransport extends Transport {
     };
   }
 
-  private formatTimestamp(ts: string): string {
-    const date = new Date(ts);
-    const YYYY = date.getFullYear();
-    const MM = String(date.getMonth() + 1).padStart(2, '0');
-    const DD = String(date.getDate()).padStart(2, '0');
-    const HH = String(date.getHours()).padStart(2, '0');
-    const min = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
-    return `${YYYY}-${MM}-${DD} ${HH}:${min}:${ss}`;
-  }
-
-  log(entry: LogEntry): void {
-    if (!this.isLevelEnabled(entry.level)) {
+private formatTimestamp(ts: string | number): string {
+    // Convert to ISO string format with brackets
+    return `[${new Date(ts).toISOString()}]`;
+}
+  
+  log(entry: LogEntry | string): void {
+    let logEntry: LogEntry;
+    
+    if (typeof entry === 'string') {
+      try {
+        logEntry = JSON.parse(entry);
+      } catch {
+        console.log(entry);
+        return;
+      }
+    } else {
+      logEntry = entry;
+    }
+    
+    if (!this.isLevelEnabled(logEntry.level)) {
       return;
     }
 
-    const { timestamp, level, service, message, ...rest } = entry;
+    const timestamp = (logEntry as any).time || logEntry.timestamp;
+    const { level, service, message, time: _, timestamp: __, ...rest } = logEntry;
 
     const colorizer = this.levelColorMap[level as Exclude<LogLevel, 'silent'>] || chalk.white;
 
@@ -51,25 +59,21 @@ export class ClassicTransport extends Transport {
     // Format service name
     const serviceStr = chalk.magenta(`[${service}]`);
 
-    // Combine metadata and message
-    const allMeta: Record<string, unknown> = {
-      ...rest,
-      message,
-    };
-    const metaKeys = Object.keys(allMeta);
-    let metaStr = '';
+    // Build log string with message first
+    let logString = `${timeStr} ${levelStr} ${serviceStr} - ${message}`;
+
+    // Add metadata after message (only if present)
+    const metaKeys = Object.keys(rest);
     if (metaKeys.length > 0) {
-      metaStr = chalk.dim(
+      const metaStr = chalk.dim(
         ' [' +
           metaKeys
-            .map((key) => `${key}=${JSON.stringify(allMeta[key])}`)
+            .map((key) => `${key}=${JSON.stringify(rest[key])}`)
             .join(' ') +
           ']'
       );
+      logString += metaStr;
     }
-
-    // Assemble final string
-    const logString = `${timeStr} ${levelStr} ${serviceStr}${metaStr}`;
 
     // Use appropriate console method
     switch (level) {
