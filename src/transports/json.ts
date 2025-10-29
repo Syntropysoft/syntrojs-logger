@@ -26,17 +26,14 @@ export class JsonTransport extends Transport {
   log(entry: LogEntry | string): void {
     // Logger already builds the JSON string for us - just output it
     // This is the fastest path: no object creation, no JSON.stringify()
-    let json: string;
-    if (typeof entry === 'string') {
-      json = entry;
-    } else {
-      // Fallback for custom transports that still pass objects
-      json = JSON.stringify(entry);
-    }
+    
+    // Guard clause: Convert entry to JSON string (functional approach)
+    const json = typeof entry === 'string' 
+      ? entry 
+      : JSON.stringify(entry); // Fallback for custom transports
 
-    // If no buffering (bufferSize=1), write immediately
+    // Guard clause: No buffering (fast path)
     if (this.bufferSize === 1) {
-      // Direct synchronous write for max speed
       process.stdout.write(json + '\n');
       return;
     }
@@ -44,7 +41,7 @@ export class JsonTransport extends Transport {
     // Add to buffer
     this.buffer.push(json);
 
-    // Flush if buffer is full (immediate flush for capacity)
+    // Guard clause: Buffer full - flush immediately
     if (this.buffer.length >= this.bufferSize) {
       this.flush();
     }

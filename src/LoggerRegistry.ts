@@ -35,21 +35,22 @@ class LoggerRegistry {
   }
 
   /**
-   * Get or create a logger by name
+   * Get or create a logger by name (functional approach).
    * 
    * This follows the syntropyLog pattern: if the logger exists, return it;
    * if not, create a new one with default options and cache it automatically.
    */
   getLogger(name: string, options?: RegistryLoggerOptions): Logger {
+    // Guard clause: Logger already exists - return cached instance
     if (this.loggers.has(name)) {
       return this.loggers.get(name)!;
     }
 
-    // Logger doesn't exist, create and register it automatically
+    // Create and register new logger (functional: immutable creation)
     const logger = new LoggerClass(
       name,
       options?.transport,
-      options?.level || 'info'
+      options?.level ?? 'info'
     );
 
     this.loggers.set(name, logger);

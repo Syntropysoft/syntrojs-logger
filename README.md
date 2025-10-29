@@ -101,6 +101,226 @@ import { createLogger } from 'syntrojs/logger';
 
 ---
 
+## 💎 Ultimate Flexibility - Simple to Complex
+
+**@syntrojs/logger** adapts to ANY use case. Start simple, grow as needed. Create multiple loggers with different complexity levels:
+
+### Example 1: Simple Logger - Basic Logging
+
+Perfect for small projects or getting started:
+
+```typescript
+// Simple logger - two lines!
+const logger = createLogger({ name: 'my-app' });
+logger.info('Hello, world!');
+```
+
+### Example 2: Medium Logger - Classic Compliance Rules
+
+Add compliance metadata for regulations like GDPR, HIPAA, or PCI-DSS:
+
+```typescript
+// Logger with compliance retention rules
+const complianceLogger = createLogger({ name: 'payment-api' })
+  .withRetention({
+    policy: 'PCI-DSS-LEVEL-1',
+    retentionPeriod: '5-years',
+    encryption: 'AES-256',
+    auditRequired: true,
+    compliance: 'PCI-DSS'
+  });
+
+complianceLogger.info({ amount: 299.99 }, 'Payment processed');
+// Output includes: "retention": { "policy": "PCI-DSS-LEVEL-1", "retentionPeriod": "5-years", ... }
+```
+
+### Example 3: Complex Logger - Enterprise Metadata
+
+Full compliance with nested regulations, business context, and operational metadata:
+
+```typescript
+// Complex logger with deeply nested compliance and business metadata
+const enterpriseLogger = createLogger({ name: 'payment-service' })
+  .withRetention({
+    // Compliance - nested regulations structure
+    compliance: {
+      regulations: {
+        pci: {
+          version: '3.2.1',
+          level: 1,
+          requirements: {
+            encryption: 'AES-256',
+            tokenization: 'required',
+            audit: {
+              enabled: true,
+              retention: '5-years',
+              alerts: ['fraud-detection', 'unauthorized-access']
+            }
+          }
+        },
+        gdpr: {
+          articles: [6, 7, 32],
+          dataProcessing: {
+            legalBasis: 'contract',
+            consent: 'explicit',
+            rightToErasure: true
+          }
+        },
+        hipaa: {
+          sections: ['164.312', '164.314'],
+          accessControls: {
+            authentication: 'mfa-required',
+            authorization: 'role-based'
+          }
+        }
+      }
+    },
+    // Business context
+    business: {
+      product: {
+        id: 'payment-gateway',
+        tier: 'enterprise',
+        pricing: { model: 'transaction-based' }
+      },
+      vendor: {
+        primary: 'stripe',
+        backup: 'paypal'
+      }
+    },
+    // Operational metadata
+    internal: {
+      team: { name: 'payments-engineering' },
+      monitoring: {
+        metrics: ['transaction-volume', 'error-rate', 'latency-p95']
+      }
+    }
+  });
+
+enterpriseLogger
+  .withTransactionId('tx-payment-12345')
+  .info({ amount: 299.99, currency: 'USD' }, 'Payment processed');
+// Output includes ALL nested metadata: compliance.regulations, business, internal, transactionId, etc.
+```
+
+### Multiple Loggers - Registry Pattern
+
+Create several loggers with different complexity levels, use on-demand:
+
+```typescript
+// Registry: Create multiple loggers with different configurations
+const loggerRegistry: Record<string, ReturnType<typeof createLogger>> = {};
+
+// 1. Simple logger - basic logging
+loggerRegistry['simple'] = createLogger({ name: 'simple-app' });
+
+// 2. Medium logger - with classic compliance
+loggerRegistry['compliance'] = createLogger({ name: 'payment-api' })
+  .withRetention({
+    policy: 'PCI-DSS-LEVEL-1',
+    retentionPeriod: '5-years',
+    compliance: 'PCI-DSS'
+  });
+
+// 3. Complex logger - full enterprise metadata
+loggerRegistry['enterprise'] = createLogger({ name: 'payment-service' })
+  .withRetention({
+    compliance: {
+      regulations: {
+        pci: {
+          version: '3.2.1',
+          requirements: {
+            encryption: 'AES-256',
+            audit: { enabled: true, retention: '5-years' }
+          }
+        },
+        gdpr: {
+          articles: [6, 7, 32],
+          dataProcessing: { legalBasis: 'contract', consent: 'explicit' }
+        }
+      }
+    },
+    business: {
+      product: { id: 'payment-gateway', tier: 'enterprise' },
+      vendor: { primary: 'stripe', backup: 'paypal' }
+    },
+    internal: {
+      team: { name: 'payments-engineering' },
+      monitoring: { metrics: ['transaction-volume', 'error-rate'] }
+    }
+  });
+
+// 4. Analytics logger - with campaigns and privacy compliance
+loggerRegistry['analytics'] = createLogger({ name: 'analytics-service' })
+  .withRetention({
+    business: {
+      campaigns: [{
+        id: 'summer-2024',
+        channels: ['email', 'push'],
+        targeting: {
+          segments: ['premium', 'active'],
+          demographics: { age: [25, 45], location: 'US' }
+        }
+      }]
+    },
+    compliance: {
+      privacy: {
+        gdpr: { anonymization: 'required', consentTracking: true },
+        ccpa: { doNotSell: 'respect', optOut: 'honored' }
+      }
+    }
+  });
+
+// Use loggers on-demand
+function getLogger(name: string) {
+  return loggerRegistry[name];
+}
+
+// Simple logging
+getLogger('simple')?.info('User logged in');
+
+// Compliance-aware logging
+getLogger('compliance')
+  ?.withTransactionId('tx-123')
+  .info({ amount: 100.0 }, 'Payment processed');
+
+// Enterprise logging with full context
+getLogger('enterprise')
+  ?.withTransactionId('tx-456')
+  .withSource('payment-api')
+  .info({ amount: 299.99 }, 'Payment processed');
+// Automatically includes: compliance.regulations, business, internal, transactionId, source, etc.
+```
+
+**Why compliance metadata matters:**
+
+Compliance rules (GDPR, HIPAA, PCI-DSS, SOX, etc.) are **critical information** for log analysis:
+
+- **Retention policies**: How long logs must be kept (legal requirements)
+- **Regulation tracking**: Which regulations apply to specific logs
+- **Audit trails**: Proof of compliance for regulators
+- **Data processing**: Legal basis, consent, and privacy requirements
+- **Encryption standards**: Security requirements for sensitive data
+- **Access controls**: Who can access logs and under what conditions
+
+With **deeply nested JSON metadata**, you can:
+- **Structure complex regulations**: Multiple regulations (PCI + GDPR + HIPAA) with nested requirements
+- **Add business context**: Campaigns, products, workflows that need tracking
+- **Track operations**: Team ownership, monitoring metrics, alert configurations
+- **Enable automatic processing**: Log aggregation tools can parse structured metadata for compliance automation
+
+**Benefits:**
+- ✅ **Start simple** - Basic logging in 2 lines
+- ✅ **Add compliance** - Classic retention rules when needed
+- ✅ **Go enterprise** - Complex nested metadata for full context
+- ✅ **Multiple loggers** - Different complexity levels per service/domain
+- ✅ **Zero limits** - Any JSON structure, any depth, any fields
+- ✅ **Type-safe** - Full TypeScript support with zero runtime overhead
+- ✅ **On-demand access** - Retrieve pre-configured loggers anywhere
+
+Perfect for: **Compliance** (GDPR, HIPAA, PCI-DSS, SOX) | **Business** (campaigns, analytics, products) | **Operations** (workflows, infrastructure, monitoring) | **Anything** your organization needs
+
+---
+
 ## 📦 Features
 
 - ⚡ **Blazing fast** - Optimized for performance (~75% of Pino's speed, 1M+ ops/sec)
@@ -242,14 +462,277 @@ dbLogger.info('Connected to database'); // includes module: 'database'
 apiLogger.info('API started'); // includes module: 'api'
 ```
 
-### With Source
+### Fluent API
+
+The logger provides a fluent API for contextual logging with method chaining:
+
+#### With Source
+
+Identify which module or component generated the log:
 
 ```typescript
 const logger = createLogger({ name: 'app' });
 const userLogger = logger.withSource('UserService');
+const redisLogger = logger.withSource('redis');
 
 userLogger.info('User created'); // includes source: 'UserService'
 ```
+
+#### With Transaction ID
+
+Track requests across multiple services in distributed systems:
+
+```typescript
+const logger = createLogger({ name: 'api' });
+const txLogger = logger.withTransactionId('tx-abc-123');
+
+txLogger.info({ userId: 123 }, 'Processing payment');
+// Output includes: "transactionId": "tx-abc-123"
+```
+
+#### With Retention Rules
+
+Attach any metadata to logs. **Completely flexible:** Any JSON object (nested at any depth) with any keys and any JSON-compatible values. Supports nested objects, arrays, and any combination. Use for:
+- **Compliance:** retention policies, regulations, encryption requirements
+- **Business:** campaign info, user segments, product IDs, marketing data
+- **Internal processes:** workflow IDs, pipeline stages, job queues, department info
+- **Anything else** your organization needs for log analysis
+
+Each organization defines their own structure:
+
+```typescript
+import type { LogRetentionRules } from '@syntrojs/logger';
+
+const logger = createLogger({ name: 'api' });
+
+// Numeric values (seconds)
+const rules: LogRetentionRules = {
+  ttl: 3600,              // Time to live: 1 hour
+  maxEntries: 10000,
+  archiveAfter: 259200,   // Archive after 3 days
+  deleteAfter: 2592000    // Delete after 30 days
+};
+
+// String values (policy codes) - for banking/healthcare compliance
+const bankingRules: LogRetentionRules = {
+  ttl: '30-days',
+  policy: 'BANK-RET-2024-A',
+  compliance: 'Basel-III'
+};
+
+// Nested metadata - multiple levels of organization
+const nestedMetadata: LogRetentionRules = {
+  // Compliance (nested)
+  compliance: {
+    policy: 'HIPAA-compliant-7years',
+    retention: {
+      period: '7-years',
+      archive: {
+        enabled: true,
+        location: 's3://compliance-archive'
+      }
+    },
+    encryption: {
+      algorithm: 'AES-256',
+      keyRotation: '30-days'
+    }
+  },
+  
+  // Business/campaign (nested)
+  business: {
+    campaign: {
+      id: 'summer-2024',
+      channel: 'email-marketing',
+      target: {
+        audience: 'millennials',
+        demographics: { age: [25, 40], location: 'US' }
+      }
+    },
+    product: {
+      id: 'prod-xyz',
+      category: 'fintech'
+    }
+  },
+  
+  // Internal processes (nested)
+  internal: {
+    workflow: {
+      id: 'wf-payment-processing',
+      department: 'finance',
+      pipeline: {
+        stage: 'validation',
+        queue: 'high-priority'
+      }
+    }
+  },
+  
+  // Arrays
+  tags: ['payment', 'compliance', 'pci-dss'],
+  policies: [
+    { name: 'GDPR', version: '2024.1' },
+    { name: 'CCPA', version: '2023.2' }
+  ]
+};
+
+const metadataLogger = logger.withRetention(nestedMetadata);
+
+metadataLogger.info({ action: 'payment' }, 'Payment processed');
+// Output includes full nested structure: "retention": { "compliance": { ... }, "business": { ... }, ... }
+```
+
+#### Method Chaining
+
+Chain multiple fluent methods together:
+
+```typescript
+const logger = createLogger({ name: 'payment-service' });
+
+const requestLogger = logger
+  .withSource('payment-api')
+  .withTransactionId('tx-payment-123')
+  .withRetention({
+    campaign: {
+      id: 'summer-2024',
+      channel: 'email'
+    },
+    workflow: {
+      id: 'wf-payment',
+      department: 'fintech'
+    },
+    compliance: {
+      standard: 'PCI-DSS',
+      level: 1,
+      requirements: {
+        encryption: 'AES-256',
+        audit: true
+      }
+    }
+  });
+
+requestLogger.info({ amount: 100.0 }, 'Payment processed');
+// Output includes: source, transactionId, retention (with full nested structure), and amount
+```
+
+#### Logger Registry Pattern - Multiple Loggers with Complex Metadata
+
+Create multiple loggers with different complex metadata configurations, then retrieve and use them on-demand. Each logger maintains its own context with deeply nested metadata for compliance, business rules, internal processes, and more:
+
+```typescript
+import { createLogger, type LogRetentionRules } from '@syntrojs/logger';
+
+// Registry pattern: Store multiple loggers with complex metadata
+const loggerRegistry: Record<string, ReturnType<typeof createLogger>> = {};
+
+// 1. Payment Service Logger - with compliance, business, and monitoring metadata
+loggerRegistry['payment-service'] = createLogger({ name: 'payment-service' })
+  .withRetention({
+    compliance: {
+      regulations: {
+        pci: {
+          version: '3.2.1',
+          requirements: {
+            encryption: 'AES-256',
+            tokenization: 'required',
+            audit: {
+              enabled: true,
+              retention: '5-years',
+              alerts: ['fraud-detection', 'unauthorized-access']
+            }
+          }
+        }
+      }
+    },
+    business: {
+      product: {
+        id: 'payment-gateway',
+        tier: 'enterprise',
+        pricing: {
+          model: 'transaction-based',
+          rates: {
+            card: { percentage: 2.9, fixed: 0.30 }
+          }
+        }
+      },
+      vendor: {
+        primary: 'stripe',
+        settings: {
+          webhookUrl: 'https://api.example.com/webhooks/payments',
+          retryPolicy: { maxAttempts: 3, backoff: 'exponential' }
+        }
+      }
+    },
+    internal: {
+      team: {
+        name: 'payments-engineering',
+        onCall: { schedule: 'rotation', escalation: ['slack', 'pagerduty'] }
+      },
+      monitoring: {
+        metrics: ['transaction-volume', 'error-rate', 'latency-p95'],
+        alerts: {
+          errorRate: { threshold: 0.05, severity: 'critical' }
+        }
+      }
+    }
+  });
+
+// 2. Analytics Service Logger - with campaigns and privacy metadata
+loggerRegistry['analytics-service'] = createLogger({ name: 'analytics-service' })
+  .withRetention({
+    business: {
+      campaigns: {
+        active: [{
+          id: 'summer-2024',
+          channels: ['email', 'push', 'in-app'],
+          targeting: {
+            segments: ['premium', 'active'],
+            demographics: { age: [25, 45], location: 'US' }
+          },
+          budgets: { daily: 1000, total: 50000 }
+        }]
+      },
+      analytics: {
+        tracking: {
+          events: ['page-view', 'click', 'conversion'],
+          properties: {
+            userId: 'hashed',
+            ipAddress: 'anonymized'
+          }
+        }
+      }
+    },
+    compliance: {
+      privacy: {
+        gdpr: { anonymization: 'required', consentTracking: true },
+        ccpa: { doNotSell: 'respect', optOut: 'honored' }
+      }
+    }
+  });
+
+// Usage: Retrieve and use loggers on-demand
+function getLogger(name: string) {
+  return loggerRegistry[name];
+}
+
+// Use payment logger
+getLogger('payment-service')
+  ?.withTransactionId('tx-payment-12345')
+  .info({ amount: 299.99, currency: 'USD' }, 'Payment processed');
+
+// Use analytics logger
+getLogger('analytics-service')
+  ?.withTransactionId('tx-analytics-abc')
+  .info({ 
+    event: 'purchase-completed',
+    userId: 789,
+    revenue: 299.99
+  }, 'Analytics event tracked');
+```
+
+**Benefits:**
+- **Centralized Configuration**: Define complex metadata once per service/domain
+- **On-Demand Access**: Retrieve pre-configured loggers anywhere in your application
+- **Rich Context**: Each log automatically includes all relevant compliance, business, and operational metadata
+- **Type Safety**: TypeScript ensures correct logger usage and metadata structure
 
 ## API
 
@@ -273,6 +756,8 @@ Creates a new logger instance.
 - `logger.setLevel(level)` - Change log level dynamically
 - `logger.child(bindings)` - Create child logger with bindings
 - `logger.withSource(source)` - Create logger with source binding
+- `logger.withTransactionId(transactionId)` - Create logger with transaction ID for distributed tracing
+- `logger.withRetention(rules)` - Create logger with any metadata (compliance, campaigns, internal processes, etc.)
 
 ### Log Format
 

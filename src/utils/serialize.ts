@@ -39,14 +39,18 @@ function _serialize(obj: unknown, seen: WeakSet<object>): JsonValue {
       stack: obj.stack,
     };
     
-    // Add custom properties (recursive call with same WeakSet)
+    // Add custom properties (functional approach - preserves immutability)
+    // Optimization: Create exclusion Set for O(1) lookups
+    const excludedProps = new Set(['message', 'name', 'stack']);
     const props = Object.getOwnPropertyNames(obj);
-    for (const prop of props) {
-      if (!['message', 'name', 'stack'].includes(prop)) {
-        error[prop] = _serialize((obj as any)[prop], seen); 
-      }
-    }
-    return error;
+    const customProps = props
+      .filter(prop => !excludedProps.has(prop))
+      .reduce<Record<string, unknown>>((acc, prop) => {
+        acc[prop] = _serialize((obj as any)[prop], seen);
+        return acc;
+      }, {});
+    
+    return { ...error, ...customProps };
   }
 
   // --- Paso 3: Manejar Referencias Circulares (solo objetos que se agregan a WeakSet) ---
@@ -67,16 +71,17 @@ function _serialize(obj: unknown, seen: WeakSet<object>): JsonValue {
     }
   }
 
-  // --- Paso 5: Manejar Objetos Planos ---
-  const result: SerializableValue = {};
-  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-    try {
-      // Propagar el WeakSet
-      result[key] = _serialize(value, seen);
-    } catch {
-      result[key] = '[Unable to serialize]';
-    }
-  }
+  // --- Paso 5: Manejar Objetos Planos (functional approach) ---
+  const result = Object.entries(obj as Record<string, unknown>)
+    .reduce<SerializableValue>((acc, [key, value]) => {
+      try {
+        // Propagar el WeakSet
+        acc[key] = _serialize(value, seen);
+      } catch {
+        acc[key] = '[Unable to serialize]';
+      }
+      return acc;
+    }, {});
 
   seen.delete(obj); // Liberar referencia al salir
   return result;

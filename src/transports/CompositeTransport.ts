@@ -17,16 +17,24 @@ export class CompositeTransport extends BaseTransport {
   }
 
   log(entry: LogEntry): void {
-    // Send to all transports (Silent Observer pattern)
+    // Send to all transports (Silent Observer pattern - functional approach)
+    // Functional: all transports receive the log, failures don't interrupt
     this.transports.forEach(transport => {
-      try {
-        transport.log(entry);
-      } catch (error) {
-        // One transport failure shouldn't affect others
-        // Silent Observer: we observe and report, but never interrupt
-        console.error('[Transport Error] Failed to write to transport:', error);
-      }
+      this.writeToTransport(transport, entry);
     });
+  }
+
+  /**
+   * Write to a single transport with error handling (Single Responsibility).
+   * @private
+   */
+  private writeToTransport(transport: Transport, entry: LogEntry): void {
+    try {
+      transport.log(entry);
+    } catch (error) {
+      // Silent Observer: One transport failure shouldn't affect others
+      console.error('[Transport Error] Failed to write to transport:', error);
+    }
   }
 
   async flush(): Promise<void> {

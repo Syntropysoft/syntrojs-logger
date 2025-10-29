@@ -38,16 +38,16 @@ export class Transport {
   }
 
   /**
-   * Process and output a log entry
-   * Can receive either a LogEntry object or a pre-formatted JSON string
+   * Process and output a log entry.
+   * Can receive either a LogEntry object or a pre-formatted JSON string.
+   * Functional approach: Guard clause with ternary for single expression.
    */
   log(entry: LogEntry | string): void {
-    // Default implementation for backwards compatibility
-    if (typeof entry === 'string') {
-      console.log(entry);
-    } else {
-      console.log(JSON.stringify(entry));
-    }
+    // Functional approach: Single expression using ternary
+    const output = typeof entry === 'string' 
+      ? entry 
+      : JSON.stringify(entry);
+    console.log(output);
   }
 
   /**

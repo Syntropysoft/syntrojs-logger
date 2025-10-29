@@ -59,17 +59,78 @@ export class AsyncContext {
   }
 
   /**
-   * Run a function within a context
+   * Run a function within a context with optional initial data.
+   * 
+   * @param fn - Function to run within the context
+   * @param initialData - Optional initial context data (e.g., correlationId, userId, request metadata)
+   * 
+   * @example
+   * ```typescript
+   * // Without initial data (auto-generates correlationId if enabled)
+   * AsyncContext.run(() => {
+   *   const id = AsyncContext.getCorrelationId(); // UUID generated automatically
+   * });
+   * 
+   * // With initial data (useful for middlewares)
+   * AsyncContext.run(() => {
+   *   logger.info('Processing request');
+   * }, { correlationId: 'req-123', userId: 456, ip: '192.168.1.1' });
+   * ```
    */
-  static run<R>(fn: () => R): R {
-    return this.storage.run(new Map(), fn);
+  /**
+   * Run a function within a context with optional initial data.
+   * Functional approach: Single expression using ternary.
+   * 
+   * @param fn - Function to run within the context
+   * @param initialData - Optional initial context data (e.g., correlationId, userId, request metadata)
+   * 
+   * @example
+   * ```typescript
+   * // Without initial data (auto-generates correlationId if enabled)
+   * AsyncContext.run(() => {
+   *   const id = AsyncContext.getCorrelationId(); // UUID generated automatically
+   * });
+   * 
+   * // With initial data (useful for middlewares)
+   * AsyncContext.run(() => {
+   *   logger.info('Processing request');
+   * }, { correlationId: 'req-123', userId: 456, ip: '192.168.1.1' });
+   * ```
+   */
+  static run<R>(fn: () => R, initialData?: Record<string, unknown>): R {
+    // Functional approach: Ternary for conditional map creation
+    const contextMap = initialData 
+      ? new Map(Object.entries(initialData))
+      : new Map<string, unknown>();
+    return this.storage.run(contextMap, fn);
   }
 
   /**
-   * Run async function within a context
+   * Run async function within a context with optional initial data.
+   * Functional approach: Single expression using ternary.
+   * 
+   * @param fn - Async function to run within the context
+   * @param initialData - Optional initial context data (e.g., correlationId, userId, request metadata)
+   * 
+   * @example
+   * ```typescript
+   * // With initial data from HTTP request middleware
+   * await AsyncContext.runAsync(async () => {
+   *   const correlationId = AsyncContext.getCorrelationId(); // from initialData or auto-generated
+   *   await processRequest();
+   * }, { 
+   *   correlationId: req.headers['x-correlation-id'],
+   *   userId: req.user?.id,
+   *   ip: req.ip 
+   * });
+   * ```
    */
-  static async runAsync<R>(fn: () => Promise<R>): Promise<R> {
-    return this.storage.run(new Map(), fn);
+  static async runAsync<R>(fn: () => Promise<R>, initialData?: Record<string, unknown>): Promise<R> {
+    // Functional approach: Ternary for conditional map creation
+    const contextMap = initialData 
+      ? new Map(Object.entries(initialData))
+      : new Map<string, unknown>();
+    return this.storage.run(contextMap, fn);
   }
 
   /**
@@ -96,17 +157,21 @@ export class AsyncContext {
   }
 
   /**
-   * Get correlation ID from context
-   * Auto-generates one if not present and autoGenerate is enabled
+   * Get correlation ID from context.
+   * Auto-generates one if not present and autoGenerate is enabled.
+   * Uses guard clauses for better readability.
    */
   static getCorrelationId(): string {
     const store = this.storage.getStore();
-    if (!store) return '';
+    
+    // Guard clause: No context store available
+    if (!store) {
+      return '';
+    }
     
     let correlationId = store.get(this.correlationIdKey) as string | undefined;
     
-    // Auto-generate if not present and auto-generate is enabled
-    // Fast path: Check correlationId first to avoid autoGenerate check if not needed
+    // Guard clause: Auto-generate if not present and enabled
     if (!correlationId && this.config.autoGenerate) {
       correlationId = randomUUID();
       store.set(this.correlationIdKey, correlationId);

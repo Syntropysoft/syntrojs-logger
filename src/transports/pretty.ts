@@ -23,19 +23,13 @@ export class PrettyTransport extends Transport {
   }
 
   log(entry: LogEntry | string): void {
-    let logEntry: LogEntry;
-    
-    if (typeof entry === 'string') {
-      try {
-        logEntry = JSON.parse(entry);
-      } catch {
-        console.log(entry);
-        return;
-      }
-    } else {
-      logEntry = entry;
+    // Guard clause: Parse string entry (functional approach)
+    const logEntry = this.parseEntry(entry);
+    if (!logEntry) {
+      return;
     }
     
+    // Guard clause: Level not enabled
     if (!this.isLevelEnabled(logEntry.level)) {
       return;
     }
@@ -60,6 +54,27 @@ export class PrettyTransport extends Transport {
     }
     
     console.log(logString);
+  }
+
+  /**
+   * Parse log entry from string or object (Single Responsibility).
+   * Returns null if parsing fails.
+   * @private
+   */
+  private parseEntry(entry: LogEntry | string): LogEntry | null {
+    // Guard clause: Already an object
+    if (typeof entry !== 'string') {
+      return entry;
+    }
+    
+    // Guard clause: Try to parse JSON string
+    try {
+      return JSON.parse(entry);
+    } catch {
+      // Fallback: Log raw string and return null
+      console.log(entry);
+      return null;
+    }
   }
 }
 

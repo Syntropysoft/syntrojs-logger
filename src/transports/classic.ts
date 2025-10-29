@@ -9,6 +9,8 @@ import { Transport, type TransportOptions } from './Transport';
 
 export class ClassicTransport extends Transport {
   private readonly levelColorMap: Record<Exclude<LogLevel, 'silent'>, any>;
+  /** Dictionary of console methods by log level (functional approach) */
+  private readonly consoleMethodMap: Record<LogLevel, (message: string) => void>;
 
   constructor(options?: TransportOptions) {
     super(options);
@@ -20,6 +22,17 @@ export class ClassicTransport extends Transport {
       debug: chalk.blue,
       trace: chalk.gray,
     };
+    
+    // Functional approach: Dictionary instead of switch statement
+    this.consoleMethodMap = {
+      fatal: console.error,
+      error: console.error,
+      warn: console.warn,
+      info: console.log,
+      debug: console.log,
+      trace: console.log,
+      silent: console.log, // Should never be called but needed for type safety
+    };
   }
 
 private formatTimestamp(ts: string | number): string {
@@ -28,19 +41,13 @@ private formatTimestamp(ts: string | number): string {
 }
   
   log(entry: LogEntry | string): void {
-    let logEntry: LogEntry;
-    
-    if (typeof entry === 'string') {
-      try {
-        logEntry = JSON.parse(entry);
-      } catch {
-        console.log(entry);
-        return;
-      }
-    } else {
-      logEntry = entry;
+    // Guard clause: Parse string entry (functional approach)
+    const logEntry = this.parseEntry(entry);
+    if (!logEntry) {
+      return;
     }
     
+    // Guard clause: Level not enabled
     if (!this.isLevelEnabled(logEntry.level)) {
       return;
     }
@@ -62,7 +69,7 @@ private formatTimestamp(ts: string | number): string {
     // Build log string with message first
     let logString = `${timeStr} ${levelStr} ${serviceStr} - ${message}`;
 
-    // Add metadata after message (only if present)
+    // Add metadata after message (only if present) - functional approach
     const metaKeys = Object.keys(rest);
     if (metaKeys.length > 0) {
       const metaStr = chalk.dim(
@@ -75,17 +82,29 @@ private formatTimestamp(ts: string | number): string {
       logString += metaStr;
     }
 
-    // Use appropriate console method
-    switch (level) {
-      case 'fatal':
-      case 'error':
-        console.error(logString);
-        break;
-      case 'warn':
-        console.warn(logString);
-        break;
-      default:
-        console.log(logString);
+    // Functional approach: Dictionary lookup instead of switch
+    const consoleMethod = this.consoleMethodMap[level] || console.log;
+    consoleMethod(logString);
+  }
+
+  /**
+   * Parse log entry from string or object (Single Responsibility).
+   * Returns null if parsing fails.
+   * @private
+   */
+  private parseEntry(entry: LogEntry | string): LogEntry | null {
+    // Guard clause: Already an object
+    if (typeof entry !== 'string') {
+      return entry;
+    }
+    
+    // Guard clause: Try to parse JSON string
+    try {
+      return JSON.parse(entry);
+    } catch {
+      // Fallback: Log raw string and return null
+      console.log(entry);
+      return null;
     }
   }
 }
