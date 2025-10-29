@@ -11,11 +11,11 @@
 
 **Quality & Security:**
 
-[![CI](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/ci.yml/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/codeql.yml/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/codeql.yml)
-[![Mutation Testing](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/mutation-testing.yml/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/mutation-testing.yml)
+[![CI](https://github.com/Syntropysoft/sintrojs-logger/workflows/CI/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Syntropysoft/sintrojs-logger/workflows/CodeQL/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/codeql.yml)
+[![Mutation Testing](https://github.com/Syntropysoft/sintrojs-logger/workflows/Mutation%20Testing/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/mutation-testing.yml)
 [![Security](https://img.shields.io/badge/security-0%20vulnerabilities-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger/security)
-[![Dependabot](https://api.dependabot.com/badges/status?host=github&repo=Syntropysoft/sintrojs-logger)](https://dependabot.com)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger)
 
 **Code Coverage:**
 
