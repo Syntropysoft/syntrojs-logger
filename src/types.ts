@@ -33,20 +33,20 @@ export type JsonValue = LogFormatArg | LogMetadata | LogMetadata[];
 
 /**
  * Type for metadata that can be attached to loggers.
- * 
+ *
  * **Completely flexible:** Can be any JSON object (nested at any depth) with any keys and any JSON-compatible values.
  * Supports nested objects, arrays, and any combination thereof. No flattening required.
- * 
+ *
  * Use this for ANY metadata your organization needs:
  * - Compliance rules (retention, policies, regulations)
  * - Business metadata (campaign info, user segments, product IDs)
  * - Internal process data (workflow IDs, pipeline stages, job queues)
  * - Audit information (who, what, when, why)
  * - Any other contextual information useful for log analysis
- * 
+ *
  * The logger simply includes this metadata in all logs from the logger instance.
  * No validation, no interpretation - just passes it through as-is, preserving the full structure.
- * 
+ *
  * @example
  * ```typescript
  * // Simple flat metadata
@@ -55,7 +55,7 @@ export type JsonValue = LogFormatArg | LogMetadata | LogMetadata[];
  *   retentionPeriod: '7-years',
  *   encryption: 'AES-256'
  * };
- * 
+ *
  * // Nested objects (multiple levels)
  * const nestedMetadata: LogRetentionRules = {
  *   compliance: {
@@ -94,7 +94,7 @@ export type JsonValue = LogFormatArg | LogMetadata | LogMetadata[];
  *     }
  *   }
  * };
- * 
+ *
  * // Arrays of objects
  * const arrayMetadata: LogRetentionRules = {
  *   policies: [

@@ -10,4 +10,3 @@ export { ArrayTransport } from './array';
 export { CompositeTransport } from './CompositeTransport';
 
 export type { Transport, TransportOptions } from './Transport';
-

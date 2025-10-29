@@ -1,13 +1,13 @@
 /**
  * Base Transport class for extensibility
- * 
+ *
  * This provides a solid foundation for custom transports including
  * future OpenTelemetry integration
  */
 
-import type { LogEntry } from '../types';
 import type { LogLevel } from '../levels';
 import { LOG_LEVEL_WEIGHTS } from '../levels';
+import type { LogEntry } from '../types';
 
 export interface TransportOptions {
   level?: LogLevel;
@@ -16,7 +16,7 @@ export interface TransportOptions {
 
 /**
  * Base Transport class
- * 
+ *
  * All transports should extend this class for consistency and future features
  */
 export class Transport {
@@ -44,9 +44,7 @@ export class Transport {
    */
   log(entry: LogEntry | string): void {
     // Functional approach: Single expression using ternary
-    const output = typeof entry === 'string' 
-      ? entry 
-      : JSON.stringify(entry);
+    const output = typeof entry === 'string' ? entry : JSON.stringify(entry);
     console.log(output);
   }
 
@@ -61,4 +59,3 @@ export class Transport {
    */
   close?(): void | Promise<void>;
 }
-

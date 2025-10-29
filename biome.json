@@ -12,7 +12,9 @@
         "noMultipleSpacesInRegularExpressionLiterals": "error",
         "noUselessCatch": "error",
         "noUselessTypeConstraint": "error",
-        "noWith": "error"
+        "noWith": "error",
+        "noStaticOnlyClass": "warn",
+        "noForEach": "warn"
       },
       "correctness": {
         "noUnusedVariables": "error"
@@ -23,7 +25,9 @@
       "suspicious": {
         "noAssignInExpressions": "error",
         "noArrayIndexKey": "warn",
-        "noCommentText": "error"
+        "noCommentText": "error",
+        "noControlCharactersInRegex": "off",
+        "noExplicitAny": "warn"
       }
     }
   },

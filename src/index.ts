@@ -1,6 +1,6 @@
 /**
  * SyntroJS Logger
- * 
+ *
  * A fast, simple, and developer-friendly logger for Node.js and Bun
  */
 
@@ -18,15 +18,15 @@ export { validatePlainJson, validateAndSanitizeJson } from './utils/jsonValidati
 
 // Convenience factory function
 import { Logger } from './Logger';
+import type { LoggingMatrix } from './compliance/LoggingMatrix';
 import type { LogLevel } from './levels';
-import type { Transport } from './types';
-import { PrettyTransport } from './transports/pretty';
-import { JsonTransport } from './transports/json';
-import { CompactTransport } from './transports/compact';
-import { ClassicTransport } from './transports/classic';
 import type { MaskingEngine } from './masking/MaskingEngine';
 import { SanitizationEngine } from './sanitization/SanitizationEngine';
-import type { LoggingMatrix } from './compliance/LoggingMatrix';
+import { ClassicTransport } from './transports/classic';
+import { CompactTransport } from './transports/compact';
+import { JsonTransport } from './transports/json';
+import { PrettyTransport } from './transports/pretty';
+import type { Transport } from './types';
 
 export interface CreateLoggerOptions {
   name?: string;
@@ -56,19 +56,27 @@ export function createLogger(options: CreateLoggerOptions = {}): Logger {
 
   // Resolve transport: use map for strings, direct assignment for Transport instances
   const transportOption = options.transport ?? 'json';
-  const transport: Transport = typeof transportOption === 'string'
-    ? (TRANSPORT_MAP[transportOption] ?? TRANSPORT_MAP.json)()
-    : transportOption;
+  const transport: Transport =
+    typeof transportOption === 'string'
+      ? (TRANSPORT_MAP[transportOption] ?? TRANSPORT_MAP.json)()
+      : transportOption;
 
   // Functional approach: Create SanitizationEngine conditionally using ternary
-  const sanitizationEngine = options.sanitizationEngine ?? 
+  const sanitizationEngine =
+    options.sanitizationEngine ??
     (options.maskingEngine ? new SanitizationEngine(options.maskingEngine) : undefined);
 
-  return new Logger(name, transport, level, {}, {
-    sanitizationEngine,
-    useAsyncContext: options.useAsyncContext,
-    loggingMatrix: options.loggingMatrix
-  });
+  return new Logger(
+    name,
+    transport,
+    level,
+    {},
+    {
+      sanitizationEngine,
+      useAsyncContext: options.useAsyncContext,
+      loggingMatrix: options.loggingMatrix,
+    }
+  );
 }
 
 /**

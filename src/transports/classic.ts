@@ -22,7 +22,7 @@ export class ClassicTransport extends Transport {
       debug: chalk.blue,
       trace: chalk.gray,
     };
-    
+
     // Functional approach: Dictionary instead of switch statement
     this.consoleMethodMap = {
       fatal: console.error,
@@ -35,29 +35,29 @@ export class ClassicTransport extends Transport {
     };
   }
 
-private formatTimestamp(ts: string | number | undefined): string {
+  private formatTimestamp(ts: string | number | undefined): string {
     // Guard clause: Handle undefined or invalid timestamps
     if (ts === undefined) {
       return `[${new Date().toISOString()}]`;
     }
-    
+
     // Guard clause: Validate timestamp before formatting
     const date = new Date(ts);
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return `[${new Date().toISOString()}]`; // Fallback to current time
     }
-    
+
     // Convert to ISO string format with brackets
     return `[${date.toISOString()}]`;
-}
-  
+  }
+
   log(entry: LogEntry | string): void {
     // Guard clause: Parse string entry (functional approach)
     const logEntry = this.parseEntry(entry);
     if (!logEntry) {
       return;
     }
-    
+
     // Guard clause: Level not enabled
     if (!this.isLevelEnabled(logEntry.level)) {
       return;
@@ -84,11 +84,7 @@ private formatTimestamp(ts: string | number | undefined): string {
     const metaKeys = Object.keys(rest);
     if (metaKeys.length > 0) {
       const metaStr = chalk.dim(
-        ' [' +
-          metaKeys
-            .map((key) => `${key}=${JSON.stringify(rest[key])}`)
-            .join(' ') +
-          ']'
+        ` [${metaKeys.map((key) => `${key}=${JSON.stringify(rest[key])}`).join(' ')}]`
       );
       logString += metaStr;
     }
@@ -108,7 +104,7 @@ private formatTimestamp(ts: string | number | undefined): string {
     if (typeof entry !== 'string') {
       return entry;
     }
-    
+
     // Guard clause: Try to parse JSON string
     try {
       return JSON.parse(entry);
@@ -119,4 +115,3 @@ private formatTimestamp(ts: string | number | undefined): string {
     }
   }
 }
-

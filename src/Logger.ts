@@ -1,23 +1,23 @@
 /**
  * Core Logger implementation
- * 
+ *
  * Provides a fast, simple logging API inspired by Pino but even more lightweight
  */
 
 import * as util from 'node:util';
-import type { LogFormatArg, LogMetadata, JsonValue } from './types';
+import { FieldFilter } from './compliance/LoggingMatrix';
+import type { LoggingMatrix } from './compliance/LoggingMatrix';
+import { AsyncContext } from './context/Context';
 import type { LogLevel } from './levels';
 import { isLevelEnabled } from './levels';
-import { JsonTransport } from './transports/json';
-import type { Transport } from './transports/Transport';
-import { AsyncContext } from './context/Context';
 import type { MaskingEngine } from './masking/MaskingEngine';
 import type { MaskingRule } from './masking/MaskingEngine';
 import { MaskingEngine as MaskingEngineClass } from './masking/MaskingEngine';
 import type { SanitizationEngine } from './sanitization/SanitizationEngine';
 import { SanitizationEngine as SanitizationEngineClass } from './sanitization/SanitizationEngine';
-import { FieldFilter } from './compliance/LoggingMatrix';
-import type { LoggingMatrix } from './compliance/LoggingMatrix';
+import type { Transport } from './transports/Transport';
+import { JsonTransport } from './transports/json';
+import type { JsonValue, LogFormatArg, LogMetadata } from './types';
 import type { LogRetentionRules } from './types';
 
 export interface LoggerBindings {
@@ -65,16 +65,16 @@ export class Logger {
     this.transport = transport;
     this.level = level;
     this.bindings = bindings;
-    
+
     // Assign optional engines (guard clauses for clarity)
     this.sanitizationEngine = options?.sanitizationEngine;
     this.maskingEngine = options?.maskingEngine;
-    
+
     // Guard clause: Set async context flag if provided
     if (options?.useAsyncContext !== undefined) {
       this.useAsyncContext = options.useAsyncContext;
     }
-    
+
     // Guard clause: Create field filter if logging matrix provided
     if (options?.loggingMatrix) {
       this.fieldFilter = new FieldFilter(options.loggingMatrix);
@@ -85,10 +85,7 @@ export class Logger {
    * Internal logging method.
    * Uses guard clauses and functional parsing for better maintainability.
    */
-  private log(
-    level: LogLevel,
-    ...args: (LogFormatArg | LogMetadata | JsonValue)[]
-  ): void {
+  private log(level: LogLevel, ...args: (LogFormatArg | LogMetadata | JsonValue)[]): void {
     // Guard clause: Level not enabled - early return
     if (!isLevelEnabled(level, this.level)) {
       return;
@@ -105,7 +102,7 @@ export class Logger {
 
     // Get async context (conditional check for performance)
     const { store, hasContext } = this.getAsyncContext();
-    
+
     // Write log entry (Single Responsibility: delegates to specialized method)
     this.writeLogEntry(level, message, metadata, hasContext, store);
   }
@@ -114,34 +111,34 @@ export class Logger {
    * Parse log arguments following Pino-like signature.
    * Functional approach: returns parsed message and metadata.
    * Single Responsibility: Only parses arguments.
-   * 
+   *
    * @private
    */
-  private parseLogArguments(
-    args: (LogFormatArg | LogMetadata | JsonValue)[]
-  ): { message: string; metadata: LogMetadata } {
+  private parseLogArguments(args: (LogFormatArg | LogMetadata | JsonValue)[]): {
+    message: string;
+    metadata: LogMetadata;
+  } {
     const firstArg = args[0];
-    
+
     // Guard clause: First arg is metadata object
-    const isMetadataObject = typeof firstArg === 'object' 
-      && firstArg !== null 
-      && !Array.isArray(firstArg);
-    
+    const isMetadataObject =
+      typeof firstArg === 'object' && firstArg !== null && !Array.isArray(firstArg);
+
     if (isMetadataObject) {
       // Pattern: logger.info({ userId: 123 }, 'User logged in', ...formatArgs)
       const metadata = firstArg as LogMetadata;
       const messageArg = String(args[1] ?? '');
       const formatArgs = args.slice(2);
       const message = this.formatMessage(messageArg, formatArgs);
-      
+
       return { message, metadata };
     }
-    
+
     // Pattern: logger.info('User logged in', ...formatArgs)
     const messageArg = String(firstArg ?? '');
     const formatArgs = args.slice(1);
     const message = this.formatMessage(messageArg, formatArgs);
-    
+
     return { message, metadata: {} };
   }
 
@@ -150,12 +147,15 @@ export class Logger {
    * Functional approach: Pure function for message formatting.
    * @private
    */
-  private formatMessage(messageArg: string, formatArgs: (LogFormatArg | LogMetadata | JsonValue)[]): string {
+  private formatMessage(
+    messageArg: string,
+    formatArgs: (LogFormatArg | LogMetadata | JsonValue)[]
+  ): string {
     // Guard clause: No format arguments or empty message
     if (!messageArg || formatArgs.length === 0) {
       return messageArg;
     }
-    
+
     // Functional: Format message with util.format
     return util.format(messageArg, ...formatArgs);
   }
@@ -172,17 +172,17 @@ export class Logger {
     if (!this.useAsyncContext) {
       return { store: undefined, hasContext: false };
     }
-    
-    const store = AsyncContext['storage'].getStore();
+
+    const store = AsyncContext.storage.getStore();
     const hasContext = !!store && store.size > 0;
-    
+
     return { store, hasContext };
   }
 
   /**
    * Write log entry with all processing (Single Responsibility).
    * Handles fast path, compliance pipeline, and JSON construction.
-   * 
+   *
    * @private
    */
   private writeLogEntry(
@@ -195,46 +195,56 @@ export class Logger {
     // Guard clause: Check if we have any additional data to add (optimized checks)
     const hasBindings = this.hasNonEmptyObject(this.bindings);
     const hasMetadata = this.hasNonEmptyObject(metadata);
-    
+
     // Fast path: No context, no bindings, no metadata - just core fields
     if (!hasContext && !hasBindings && !hasMetadata) {
       this.writeFastPathLog(level, message);
       return;
     }
-    
+
     // Build JSON string (Pino-style: minimal object creation)
     const timestamp = Date.now();
     let json = this.buildBaseJson(timestamp, level, message);
-    
+
     // Compliance Pipeline: Process metadata, context, and bindings
     const shouldProcessCompliance = this.useAsyncContext && this.sanitizationEngine;
-    
+
     if (!shouldProcessCompliance) {
       // Fast path without compliance
-      json = this.appendFieldsToJson(json, { metadata, bindings: this.bindings }, hasContext, store);
+      json = this.appendFieldsToJson(
+        json,
+        { metadata, bindings: this.bindings },
+        hasContext,
+        store
+      );
       json += '}';
       this.writeToTransport(json);
       return;
     }
-    
+
     // Process through compliance pipeline (sanitization + masking)
     const processed = this.processCompliancePipeline(metadata, hasContext, store, level);
-    
+
     // Build final JSON with processed data
-    json = this.appendFieldsToJson(json, {
-      metadata: processed.processedMetadata,
-      context: processed.processedContext,
-      bindings: processed.processedBindings
-    }, hasContext, store);
+    json = this.appendFieldsToJson(
+      json,
+      {
+        metadata: processed.processedMetadata,
+        context: processed.processedContext,
+        bindings: processed.processedBindings,
+      },
+      hasContext,
+      store
+    );
     json += '}';
-    
+
     this.writeToTransport(json);
   }
 
   /**
    * Write fast path log (no context, bindings, or metadata).
    * Single Responsibility: Only handles minimal log entry.
-   * 
+   *
    * @private
    */
   private writeFastPathLog(level: LogLevel, message: string): void {
@@ -246,7 +256,7 @@ export class Logger {
   /**
    * Build base JSON string with required fields.
    * Single Responsibility: Only constructs base JSON.
-   * 
+   *
    * @private
    */
   private buildBaseJson(timestamp: number, level: LogLevel, message: string): string {
@@ -266,7 +276,7 @@ export class Logger {
     if (!obj || typeof obj !== 'object') {
       return false;
     }
-    
+
     // Performance: Direct length check (Object.keys is optimized in modern JS engines)
     return Object.keys(obj).length > 0;
   }
@@ -274,7 +284,7 @@ export class Logger {
   /**
    * Process data through compliance pipeline (filter → sanitize → mask).
    * Single Responsibility: Only handles compliance processing logic.
-   * 
+   *
    * @private
    */
   private processCompliancePipeline(
@@ -292,50 +302,43 @@ export class Logger {
       return {
         processedMetadata: metadata,
         processedContext: hasContext ? store : undefined,
-        processedBindings: this.bindings
+        processedBindings: this.bindings,
       };
     }
 
     // Collect all data sources (functional approach)
     // Optimization: Direct Map iteration is faster than Array.from for small maps
-    const contextData = hasContext && store 
-      ? Object.fromEntries(
-          Array.from(store.entries())
-            .filter(([, value]) => value !== undefined) // Key is always defined from Map entries
-        )
-      : {};
-    
-    const filteredContext = this.fieldFilter && hasContext
-      ? this.fieldFilter.filterContext(contextData, level)
-      : contextData;
-    
+    const contextData =
+      hasContext && store
+        ? Object.fromEntries(
+            Array.from(store.entries()).filter(([, value]) => value !== undefined) // Key is always defined from Map entries
+          )
+        : {};
+
+    const filteredContext =
+      this.fieldFilter && hasContext
+        ? this.fieldFilter.filterContext(contextData, level)
+        : contextData;
+
     // Combine all data sources (metadata takes precedence)
     const combinedData = {
       ...this.collectValidBindings(),
       ...filteredContext,
-      ...metadata
+      ...metadata,
     };
-    
+
     // Process through compliance pipeline
     const sanitized = this.sanitizationEngine.process(combinedData);
-    
+
     // Rebuild context and bindings from sanitized data (immutable approach)
-    const processedContext = this.rebuildContextFromSanitized(
-      sanitized,
-      hasContext,
-      store
-    );
-    
-    const processedBindings = this.rebuildBindingsFromSanitized(
-      sanitized,
-      hasContext,
-      store
-    );
-    
+    const processedContext = this.rebuildContextFromSanitized(sanitized, hasContext, store);
+
+    const processedBindings = this.rebuildBindingsFromSanitized(sanitized, hasContext, store);
+
     return {
       processedMetadata: sanitized,
       processedContext,
-      processedBindings
+      processedBindings,
     };
   }
 
@@ -349,10 +352,10 @@ export class Logger {
     if (!this.bindings) {
       return {};
     }
-    
+
     // Functional approach: Filter undefined values only (keys are always truthy)
     return Object.keys(this.bindings)
-      .filter(key => this.bindings[key] !== undefined)
+      .filter((key) => this.bindings[key] !== undefined)
       .reduce<LoggerBindings>((acc, key) => {
         acc[key] = this.bindings[key];
         return acc;
@@ -370,15 +373,16 @@ export class Logger {
   ): Map<string, unknown> | undefined {
     // Guard clause: No context to rebuild
     if (!hasContext || !store || !this.useAsyncContext) return undefined;
-    
+
     return new Map(
       Object.keys(sanitized)
-        .filter(key => {
+        .filter((key) => {
           const wasInContext = store.has(key);
-          const wasInBindings = this.bindings?.hasOwnProperty(key) ?? false;
+          const wasInBindings =
+            (this.bindings && Object.prototype.hasOwnProperty.call(this.bindings, key)) ?? false;
           return wasInContext && !wasInBindings;
         })
-        .map(key => [key, sanitized[key]])
+        .map((key) => [key, sanitized[key]])
     );
   }
 
@@ -393,10 +397,10 @@ export class Logger {
   ): LoggerBindings {
     // Guard clause: No bindings to rebuild
     if (!this.bindings) return {};
-    
+
     return Object.keys(sanitized)
-      .filter(key => {
-        const wasInBindings = this.bindings.hasOwnProperty(key);
+      .filter((key) => {
+        const wasInBindings = Object.prototype.hasOwnProperty.call(this.bindings, key);
         const wasInContext = hasContext && store?.has(key);
         return wasInBindings && !wasInContext;
       })
@@ -422,38 +426,39 @@ export class Logger {
     store: Map<string, unknown> | undefined
   ): string {
     let result = json;
-    
+
     // Append context fields (functional approach)
     if (hasContext && (data.context || store)) {
-      const contextToUse = data.context || store!;
+      const contextToUse = data.context || (store ?? new Map());
       result += Array.from(contextToUse.entries())
         .filter(([key, value]) => key && value !== undefined)
         .map(([key, value]) => `,"${key}":${JSON.stringify(value)}`)
         .join('');
     }
-    
+
     // Append bindings (skip duplicates with context) - functional approach
     if (data.bindings) {
       result += Object.keys(data.bindings)
-        .filter(key => key && data.bindings![key] !== undefined)
-        .filter(key => !hasContext || !store?.has(key))
-        .map(key => `,"${key}":${JSON.stringify(data.bindings![key])}`)
+        .filter((key) => key && data.bindings?.[key] !== undefined)
+        .filter((key) => !hasContext || !store?.has(key))
+        .map((key) => `,"${key}":${JSON.stringify(data.bindings?.[key])}`)
         .join('');
     }
-    
+
     // Append metadata (takes precedence, skip duplicates) - functional approach
     if (data.metadata) {
       result += Object.keys(data.metadata)
-        .filter(key => key && data.metadata[key] !== undefined)
-        .filter(key => {
+        .filter((key) => key && data.metadata[key] !== undefined)
+        .filter((key) => {
           const notInContext = !hasContext || !store?.has(key);
-          const notInBindings = !data.bindings || !data.bindings.hasOwnProperty(key);
+          const notInBindings =
+            !data.bindings || !Object.prototype.hasOwnProperty.call(data.bindings, key);
           return notInContext && notInBindings;
         })
-        .map(key => `,"${key}":${JSON.stringify(data.metadata[key])}`)
+        .map((key) => `,"${key}":${JSON.stringify(data.metadata[key])}`)
         .join('');
     }
-    
+
     return result;
   }
 
@@ -515,7 +520,7 @@ export class Logger {
         sanitizationEngine: this.sanitizationEngine,
         maskingEngine: this.maskingEngine,
         useAsyncContext: this.useAsyncContext,
-        loggingMatrix: this.fieldFilter ? this.fieldFilter.getMatrix() : undefined
+        loggingMatrix: this.fieldFilter ? this.fieldFilter.getMatrix() : undefined,
       }
     );
   }
@@ -543,15 +548,15 @@ export class Logger {
   /**
    * Create a logger with metadata bound to it.
    * The provided metadata will be included in all logs from this logger.
-   * 
+   *
    * **Supports nested JSON of any depth** - objects, arrays, nested objects, etc.
-   * 
+   *
    * Use this for any metadata your organization needs:
    * - Compliance rules (retention, policies, regulations)
    * - Business metadata (campaign info, user segments, product IDs)
    * - Internal process data (workflow IDs, pipeline stages, job queues)
    * - Audit information or any other contextual data
-   * 
+   *
    * The logger simply includes this metadata as-is, preserving the full nested structure,
    * without validation or interpretation.
    * @param rules - A JSON object (can be nested at any depth) containing any metadata you need.
@@ -571,7 +576,7 @@ export class Logger {
     if (!this.transport.flush) {
       return;
     }
-    
+
     await this.transport.flush();
   }
 
@@ -584,39 +589,39 @@ export class Logger {
     if (!this.transport.close) {
       return;
     }
-    
+
     await this.transport.close();
   }
 
   /**
    * Reconfigure logger settings at runtime (hot reconfiguration).
-   * 
+   *
    * Allows changing logger settings without creating a new instance.
    * Security: Only allows adding masking rules, not modifying existing ones.
-   * 
+   *
    * @param options - Configuration options
    * @param options.level - Change log level dynamically
    * @param options.transport - Change transport dynamically
    * @param options.addMaskingRule - Add a new masking rule (only add, cannot modify existing)
    * @param options.loggingMatrix - Update logging matrix configuration
-   * 
+   *
    * @example
    * ```typescript
    * // Change log level at runtime
    * logger.reconfigure({ level: 'debug' });
-   * 
+   *
    * // Switch transport
    * logger.reconfigure({ transport: new PrettyTransport() });
-   * 
+   *
    * // Add a new masking rule
-   * logger.reconfigure({ 
+   * logger.reconfigure({
    *   addMaskingRule: {
    *     pattern: /custom-field/i,
    *     strategy: MaskingStrategy.CUSTOM,
    *     customMask: (value) => '***'
    *   }
    * });
-   * 
+   *
    * // Update logging matrix
    * logger.reconfigure({
    *   loggingMatrix: {
@@ -665,20 +670,19 @@ export class Logger {
    */
   private switchTransport(newTransport: Transport): void {
     const oldTransport = this.transport;
-    
+
     // Immediately switch to new transport (non-blocking)
     this.transport = newTransport;
-    
+
     // Guard clause: No cleanup needed
     if (!oldTransport.close) {
       return;
     }
 
     // Fire and forget cleanup (don't block hot reconfiguration)
-    Promise.resolve(oldTransport.close())
-      .catch(() => {
-        // Silent observer: Ignore cleanup errors
-      });
+    Promise.resolve(oldTransport.close()).catch(() => {
+      // Silent observer: Ignore cleanup errors
+    });
   }
 
   /**

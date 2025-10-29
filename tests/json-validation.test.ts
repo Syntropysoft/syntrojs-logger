@@ -3,12 +3,12 @@
  * Tests for plain JSON validation to prevent code injection
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   isPlainObject,
   isValidJsonPrimitive,
-  validatePlainJson,
   validateAndSanitizeJson,
+  validatePlainJson,
 } from '../src/utils/jsonValidation';
 
 describe('JSON Validation', () => {
@@ -92,7 +92,7 @@ describe('JSON Validation', () => {
       class CustomClass {
         value = 'test';
       }
-      
+
       expect(() => {
         validatePlainJson({
           instance: new CustomClass(),
@@ -145,7 +145,7 @@ describe('JSON Validation', () => {
     it('should return valid plain JSON as-is', () => {
       const input = { key: 'value', number: 123 };
       const result = validateAndSanitizeJson(input);
-      
+
       expect(result).toEqual(input);
       expect(result).not.toBe(input); // Should be a copy
     });
@@ -154,14 +154,14 @@ describe('JSON Validation', () => {
       class CustomClass {
         value = 'test';
       }
-      
+
       const input = {
         valid: 'value',
         invalid: new CustomClass(),
       };
-      
+
       const result = validateAndSanitizeJson(input);
-      
+
       expect(result.valid).toBe('value');
       expect(result.invalid).toBeUndefined();
     });
@@ -170,7 +170,7 @@ describe('JSON Validation', () => {
       class CustomClass {
         value = 'test';
       }
-      
+
       const input = {
         level1: {
           valid: 'value',
@@ -180,9 +180,9 @@ describe('JSON Validation', () => {
           },
         },
       };
-      
+
       const result = validateAndSanitizeJson(input);
-      
+
       expect(result.level1.valid).toBe('value');
       expect(result.level1.level2.invalid).toBeUndefined();
       expect(result.level1.level2.valid).toBe(123);
@@ -198,9 +198,9 @@ describe('JSON Validation', () => {
           null,
         ],
       };
-      
+
       const result = validateAndSanitizeJson(input);
-      
+
       expect(result.items).toEqual(['valid', 123, null]);
     });
 
@@ -208,16 +208,13 @@ describe('JSON Validation', () => {
       class CustomClass {
         value = 'test';
       }
-      
+
       const input = {
-        items: [
-          { valid: 'value', invalid: new CustomClass() },
-          { valid: 123 },
-        ],
+        items: [{ valid: 'value', invalid: new CustomClass() }, { valid: 123 }],
       };
-      
+
       const result = validateAndSanitizeJson(input);
-      
+
       expect(result.items[0].valid).toBe('value');
       expect(result.items[0].invalid).toBeUndefined();
       expect(result.items[1].valid).toBe(123);
@@ -255,14 +252,13 @@ describe('JSON Validation', () => {
           },
         },
       };
-      
+
       expect(() => {
         validatePlainJson(deep);
       }).not.toThrow();
-      
+
       const result = validateAndSanitizeJson(deep);
       expect(result.level1.level2.level3.level4.level5).toBe('value');
     });
   });
 });
-

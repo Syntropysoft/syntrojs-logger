@@ -1,14 +1,14 @@
 /**
  * Logger Registry
- * 
+ *
  * Global registry for managing and retrieving logger instances by name
  * Allows accessing loggers from anywhere in your application
  */
 
 import type { Logger } from './Logger';
+import { Logger as LoggerClass } from './Logger';
 import type { LogLevel } from './levels';
 import type { Transport } from './types';
-import { Logger as LoggerClass } from './Logger';
 
 export interface RegistryLoggerOptions {
   name?: string;
@@ -18,7 +18,7 @@ export interface RegistryLoggerOptions {
 
 /**
  * Global Logger Registry
- * 
+ *
  * Singleton pattern to manage logger instances across the application
  */
 class LoggerRegistry {
@@ -36,22 +36,19 @@ class LoggerRegistry {
 
   /**
    * Get or create a logger by name (functional approach).
-   * 
+   *
    * This follows the syntropyLog pattern: if the logger exists, return it;
    * if not, create a new one with default options and cache it automatically.
    */
   getLogger(name: string, options?: RegistryLoggerOptions): Logger {
     // Guard clause: Logger already exists - return cached instance
-    if (this.loggers.has(name)) {
-      return this.loggers.get(name)!;
+    const existing = this.loggers.get(name);
+    if (existing) {
+      return existing;
     }
 
     // Create and register new logger (functional: immutable creation)
-    const logger = new LoggerClass(
-      name,
-      options?.transport,
-      options?.level ?? 'info'
-    );
+    const logger = new LoggerClass(name, options?.transport, options?.level ?? 'info');
 
     this.loggers.set(name, logger);
     return logger;
@@ -103,23 +100,23 @@ export const loggerRegistry = LoggerRegistry.getInstance();
 
 /**
  * Get a logger by name from anywhere in the app
- * 
+ *
  * Automatically creates the logger if it doesn't exist.
  * Registration is completely internal and transparent.
- * 
+ *
  * @example
  * ```typescript
  * import { getLogger } from '@syntrojs/logger/registry';
- * 
+ *
  * // First call: creates logger with default options
  * const dbLogger = getLogger('database');
  * dbLogger.info('Query executed');
- * 
+ *
  * // Second call in different file: returns same instance
  * import { getLogger } from '@syntrojs/logger/registry';
  * const logger = getLogger('database');
  * logger.info('Another query'); // Same instance
- * 
+ *
  * // With custom options (only on first call)
  * const apiLogger = getLogger('api', { level: 'debug', transport: 'json' });
  * ```
@@ -127,4 +124,3 @@ export const loggerRegistry = LoggerRegistry.getInstance();
 export function getLogger(name: string, options?: RegistryLoggerOptions): Logger {
   return loggerRegistry.getLogger(name, options);
 }
-

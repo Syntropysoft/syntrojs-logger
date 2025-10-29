@@ -3,18 +3,18 @@
  * Tests follow SOLID, DDD, guard clauses, and functional programming patterns
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Logger } from '../src/Logger';
-import { ArrayTransport } from '../src/transports/array';
-import { JsonTransport } from '../src/transports/json';
 import { AsyncContext } from '../src/context/Context';
 import type { LogLevel } from '../src/levels';
+import { ArrayTransport } from '../src/transports/array';
+import { JsonTransport } from '../src/transports/json';
 
 describe('Logger', () => {
   describe('Constructor', () => {
     it('should create logger with default values', () => {
       const logger = new Logger('test');
-      
+
       expect(logger.name).toBe('test');
       expect(logger.level).toBe('info');
       expect(logger).toBeInstanceOf(Logger);
@@ -22,13 +22,13 @@ describe('Logger', () => {
 
     it('should create logger with custom level', () => {
       const logger = new Logger('test', new ArrayTransport(), 'debug');
-      
+
       expect(logger.level).toBe('debug');
     });
 
     it('should create logger with bindings', () => {
       const logger = new Logger('test', new ArrayTransport(), 'info', { userId: 123 });
-      
+
       expect(logger).toBeInstanceOf(Logger);
     });
   });
@@ -37,13 +37,13 @@ describe('Logger', () => {
     it('should respect log level (debug)', () => {
       const transport = new ArrayTransport();
       const logger = new Logger('test', transport, 'debug');
-      
+
       logger.trace('should not appear');
       logger.debug('should appear');
       logger.info('should appear');
 
       expect(transport.entries.length).toBe(2);
-      const messages = transport.getParsedEntries().map(e => e.message);
+      const messages = transport.getParsedEntries().map((e) => e.message);
       expect(messages).toContain('should appear');
       expect(messages).not.toContain('should not appear');
     });
@@ -51,7 +51,7 @@ describe('Logger', () => {
     it('should respect log level (info)', () => {
       const transport = new ArrayTransport();
       const logger = new Logger('test', transport, 'info');
-      
+
       logger.debug('should not appear');
       logger.info('should appear');
       logger.warn('should appear');
@@ -61,10 +61,10 @@ describe('Logger', () => {
 
     it('should change log level dynamically', () => {
       const logger = new Logger('test', new ArrayTransport(), 'info');
-      
+
       logger.setLevel('debug');
       expect(logger.level).toBe('debug');
-      
+
       logger.setLevel('error');
       expect(logger.level).toBe('error');
     });
@@ -279,9 +279,9 @@ describe('Logger', () => {
   describe('Reconfigure', () => {
     it('should change log level at runtime', () => {
       const logger = new Logger('test', new ArrayTransport(), 'info');
-      
+
       logger.reconfigure({ level: 'debug' });
-      
+
       expect(logger.level).toBe('debug');
     });
 
@@ -289,9 +289,9 @@ describe('Logger', () => {
       const oldTransport = new ArrayTransport();
       const newTransport = new ArrayTransport();
       const logger = new Logger('test', oldTransport, 'info');
-      
+
       logger.reconfigure({ transport: newTransport });
-      
+
       // Verify transport was switched by logging
       logger.info('test');
       expect(oldTransport.entries.length).toBe(0);
@@ -301,9 +301,9 @@ describe('Logger', () => {
     it('should handle empty reconfigure options', () => {
       const logger = new Logger('test', new ArrayTransport(), 'info');
       const originalLevel = logger.level;
-      
+
       logger.reconfigure({});
-      
+
       expect(logger.level).toBe(originalLevel);
     });
   });
@@ -322,4 +322,3 @@ describe('Logger', () => {
     });
   });
 });
-

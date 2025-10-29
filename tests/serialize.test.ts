@@ -2,8 +2,8 @@
  * Tests for serialize utilities
  */
 
-import { describe, it, expect } from 'vitest';
-import { serialize, safeStringify } from '../src/utils/serialize';
+import { describe, expect, it } from 'vitest';
+import { safeStringify, serialize } from '../src/utils/serialize';
 
 describe('serialize', () => {
   describe('Primitives', () => {
@@ -49,7 +49,7 @@ describe('serialize', () => {
     it('should serialize Error with message, name, and stack', () => {
       const error = new Error('Test error');
       const result = serialize(error);
-      
+
       expect(result).toHaveProperty('message', 'Test error');
       expect(result).toHaveProperty('name', 'Error');
       expect(result).toHaveProperty('stack');
@@ -59,9 +59,9 @@ describe('serialize', () => {
       const error = new Error('Test') as Error & { code: string; status: number };
       error.code = 'E_TEST';
       error.status = 500;
-      
+
       const result = serialize(error);
-      
+
       expect(result).toHaveProperty('message', 'Test');
       expect(result).toHaveProperty('code', 'E_TEST');
       expect(result).toHaveProperty('status', 500);
@@ -70,9 +70,9 @@ describe('serialize', () => {
     it('should serialize nested Errors', () => {
       const error = new Error('Outer');
       (error as any).inner = new Error('Inner');
-      
+
       const result = serialize(error);
-      
+
       expect(result).toHaveProperty('message', 'Outer');
       expect((result as any).inner).toHaveProperty('message', 'Inner');
     });
@@ -103,7 +103,7 @@ describe('serialize', () => {
     it('should handle circular references in objects', () => {
       const obj: any = { name: 'test' };
       obj.self = obj;
-      
+
       const result = serialize(obj);
       expect(result).toEqual({ name: 'test', self: '[Circular]' });
     });
@@ -111,7 +111,7 @@ describe('serialize', () => {
     it('should handle circular references in arrays', () => {
       const arr: any[] = [1, 2];
       arr.push(arr);
-      
+
       const result = serialize(arr);
       expect(result).toEqual([1, 2, '[Circular]']);
     });
@@ -119,7 +119,7 @@ describe('serialize', () => {
     it('should handle deeply nested circular references', () => {
       const obj: any = { level1: { level2: {} } };
       obj.level1.level2.circular = obj;
-      
+
       const result = serialize(obj);
       expect((result as any).level1.level2.circular).toBe('[Circular]');
     });
@@ -131,12 +131,12 @@ describe('serialize', () => {
         level1: {
           level2: {
             level3: {
-              value: 'deep'
-            }
-          }
-        }
+              value: 'deep',
+            },
+          },
+        },
       };
-      
+
       const result = serialize(obj);
       expect((result as any).level1.level2.level3.value).toBe('deep');
     });
@@ -150,9 +150,9 @@ describe('serialize', () => {
         regex: /test/,
         error: new Error('test'),
         array: [1, 2, 3],
-        nested: { key: 'value' }
+        nested: { key: 'value' },
       };
-      
+
       const result = serialize(obj);
       expect(result).toHaveProperty('string', 'value');
       expect(result).toHaveProperty('number', 123);
@@ -177,7 +177,7 @@ describe('safeStringify', () => {
   it('should handle circular references gracefully', () => {
     const obj: any = { name: 'test' };
     obj.self = obj;
-    
+
     const result = safeStringify(obj);
     expect(result).toContain('[Circular]');
     expect(() => JSON.parse(result)).not.toThrow();
@@ -186,7 +186,7 @@ describe('safeStringify', () => {
   it('should handle Errors', () => {
     const error = new Error('Test error');
     const result = safeStringify(error);
-    
+
     expect(result).toContain('"message"');
     expect(result).toContain('Test error');
   });
@@ -194,7 +194,7 @@ describe('safeStringify', () => {
   it('should handle Dates', () => {
     const date = new Date('2024-01-01');
     const result = safeStringify({ date });
-    
+
     expect(result).toContain('"2024-01-01T00:00:00.000Z"');
   });
 
@@ -202,10 +202,9 @@ describe('safeStringify', () => {
     // Create object that causes stringify to fail
     const circular: any = {};
     circular.self = circular;
-    
+
     // This should still work, but test edge case
     const result = safeStringify(circular);
     expect(typeof result).toBe('string');
   });
 });
-

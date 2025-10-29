@@ -3,7 +3,7 @@
  * Tests for all masking strategies using functional approach
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { MaskingEngine, MaskingStrategy } from '../src/masking/MaskingEngine';
 import type { MaskingRule } from '../src/masking/MaskingEngine';
 
@@ -12,7 +12,7 @@ describe('MaskingEngine', () => {
     it('should create engine with default rules', () => {
       const engine = new MaskingEngine();
       const stats = engine.getStats();
-      
+
       expect(stats.initialized).toBe(false);
       expect(stats.totalRules).toBeGreaterThan(0);
     });
@@ -20,7 +20,7 @@ describe('MaskingEngine', () => {
     it('should create engine without default rules', () => {
       const engine = new MaskingEngine({ enableDefaultRules: false });
       const stats = engine.getStats();
-      
+
       expect(stats.totalRules).toBe(0);
     });
 
@@ -34,12 +34,12 @@ describe('MaskingEngine', () => {
         pattern: /secret/i,
         strategy: MaskingStrategy.PASSWORD,
       };
-      
+
       const engine = new MaskingEngine({
         rules: [customRule],
         enableDefaultRules: false,
       });
-      
+
       const stats = engine.getStats();
       expect(stats.totalRules).toBe(1);
     });
@@ -185,7 +185,7 @@ describe('MaskingEngine', () => {
         engine.addRule({
           pattern: /secret/i,
           strategy: MaskingStrategy.CUSTOM,
-          customMask: (value) => '[REDACTED]',
+          customMask: (_value) => '[REDACTED]',
         });
 
         const result = engine.process({ secret: 'very-secret-value' });
@@ -240,7 +240,7 @@ describe('MaskingEngine', () => {
   describe('Regex Validation (ReDoS Prevention)', () => {
     it('should reject dangerous regex patterns', () => {
       const engine = new MaskingEngine({ enableDefaultRules: false });
-      
+
       const dangerousRule: MaskingRule = {
         pattern: '(a+)+$', // Potentially dangerous
         strategy: MaskingStrategy.PASSWORD,
@@ -253,7 +253,7 @@ describe('MaskingEngine', () => {
 
     it('should accept safe regex patterns', () => {
       const engine = new MaskingEngine({ enableDefaultRules: false });
-      
+
       const safeRule: MaskingRule = {
         pattern: /password|passwd/i,
         strategy: MaskingStrategy.PASSWORD,
@@ -298,7 +298,7 @@ describe('MaskingEngine', () => {
       });
 
       const result = engine.process({ secret: 'value' });
-      
+
       // First rule (TOKEN) should win
       expect(result.secret).toMatch(/^.{4}/); // Token format
     });
@@ -307,7 +307,7 @@ describe('MaskingEngine', () => {
   describe('Default Rules', () => {
     it('should have default credit card rule', () => {
       const engine = new MaskingEngine();
-      
+
       const result = engine.process({
         credit_card: '1234567890123456',
       });
@@ -317,7 +317,7 @@ describe('MaskingEngine', () => {
 
     it('should have default email rule', () => {
       const engine = new MaskingEngine();
-      
+
       const result = engine.process({
         user_email: 'user@example.com',
       });
@@ -326,4 +326,3 @@ describe('MaskingEngine', () => {
     });
   });
 });
-

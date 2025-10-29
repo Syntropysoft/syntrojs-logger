@@ -18,9 +18,9 @@ function _serialize(obj: unknown, seen: WeakSet<object>): JsonValue {
   if (obj === null || obj === undefined || typeof obj !== 'object') {
     return obj;
   }
-  
+
   // --- Paso 2: Manejar Clases Especiales (no circulares) ---
-  
+
   // Handle Date
   if (obj instanceof Date) {
     return obj.toISOString();
@@ -38,18 +38,18 @@ function _serialize(obj: unknown, seen: WeakSet<object>): JsonValue {
       name: obj.name,
       stack: obj.stack,
     };
-    
+
     // Add custom properties (functional approach - preserves immutability)
     // Optimization: Create exclusion Set for O(1) lookups
     const excludedProps = new Set(['message', 'name', 'stack']);
     const props = Object.getOwnPropertyNames(obj);
     const customProps = props
-      .filter(prop => !excludedProps.has(prop))
+      .filter((prop) => !excludedProps.has(prop))
       .reduce<Record<string, unknown>>((acc, prop) => {
         acc[prop] = _serialize((obj as any)[prop], seen);
         return acc;
       }, {});
-    
+
     return { ...error, ...customProps };
   }
 
@@ -63,7 +63,7 @@ function _serialize(obj: unknown, seen: WeakSet<object>): JsonValue {
   if (Array.isArray(obj)) {
     try {
       // Propagar el WeakSet
-      return obj.map(item => _serialize(item, seen)); 
+      return obj.map((item) => _serialize(item, seen));
     } catch {
       return '[Circular]';
     } finally {
@@ -72,8 +72,8 @@ function _serialize(obj: unknown, seen: WeakSet<object>): JsonValue {
   }
 
   // --- Paso 5: Manejar Objetos Planos (functional approach) ---
-  const result = Object.entries(obj as Record<string, unknown>)
-    .reduce<SerializableValue>((acc, [key, value]) => {
+  const result = Object.entries(obj as Record<string, unknown>).reduce<SerializableValue>(
+    (acc, [key, value]) => {
       try {
         // Propagar el WeakSet
         acc[key] = _serialize(value, seen);
@@ -81,12 +81,13 @@ function _serialize(obj: unknown, seen: WeakSet<object>): JsonValue {
         acc[key] = '[Unable to serialize]';
       }
       return acc;
-    }, {});
+    },
+    {}
+  );
 
   seen.delete(obj); // Liberar referencia al salir
   return result;
 }
-
 
 /**
  * Serialize complex objects to plain objects
@@ -111,4 +112,3 @@ export function safeStringify(obj: unknown): string {
     return String(obj);
   }
 }
-

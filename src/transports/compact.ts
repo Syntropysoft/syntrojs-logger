@@ -4,8 +4,8 @@
 
 import chalk from 'chalk';
 import type { LogEntry, LogLevel } from '../types';
-import { Transport, type TransportOptions } from './Transport';
 import { safeStringify } from '../utils/serialize';
+import { Transport, type TransportOptions } from './Transport';
 
 export class CompactTransport extends Transport {
   private readonly levelColorMap: Record<Exclude<LogLevel, 'silent'>, any>;
@@ -28,42 +28,41 @@ export class CompactTransport extends Transport {
     if (!logEntry) {
       return;
     }
-    
+
     // Guard clause: Level not enabled
     if (!this.isLevelEnabled(logEntry.level)) {
       return;
     }
 
     const { level, message, service, timestamp, ...rest } = logEntry;
-    
+
     const colorizer = this.levelColorMap[level as Exclude<LogLevel, 'silent'>] || chalk.white;
-    
+
     // Guard clause: Handle invalid timestamps
     const date = timestamp ? new Date(timestamp) : new Date();
-    const timeStr = isNaN(date.getTime())
+    const timeStr = Number.isNaN(date.getTime())
       ? chalk.gray(`[${new Date().toISOString()}]`)
       : chalk.gray(`[${date.toISOString()}]`);
     const levelString = colorizer(`[${level.toUpperCase()}]`);
     const serviceString = service ? chalk.blue(`(${service})`) : '';
-    
+
     let logString = `${timeStr} ${levelString} ${serviceString}: ${message}`;
-    
+
     // Add metadata on same line
     const metaKeys = Object.keys(rest);
     if (metaKeys.length > 0) {
       const metaString = metaKeys
         .map((key) => {
           const value = rest[key];
-          const formattedValue = typeof value === 'object' && value !== null
-            ? safeStringify(value)
-            : value;
+          const formattedValue =
+            typeof value === 'object' && value !== null ? safeStringify(value) : value;
           return `${chalk.dim(key)}=${chalk.gray(formattedValue)}`;
         })
         .join(' ');
-      
+
       logString += ` ${chalk.dim('|')} ${metaString}`;
     }
-    
+
     console.log(logString);
   }
 
@@ -77,7 +76,7 @@ export class CompactTransport extends Transport {
     if (typeof entry !== 'string') {
       return entry;
     }
-    
+
     // Guard clause: Try to parse JSON string
     try {
       return JSON.parse(entry);

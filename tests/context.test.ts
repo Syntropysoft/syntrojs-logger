@@ -3,7 +3,7 @@
  * Tests for context propagation across async operations
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AsyncContext } from '../src/context/Context';
 
 describe('AsyncContext', () => {
@@ -38,36 +38,36 @@ describe('AsyncContext', () => {
   describe('run (synchronous)', () => {
     it('should create context for synchronous code', () => {
       let captured: string | undefined;
-      
+
       AsyncContext.run(() => {
         AsyncContext.set('correlationId', 'corr-123');
         captured = AsyncContext.get('correlationId') as string;
       });
-      
+
       expect(captured).toBe('corr-123');
     });
 
     it('should isolate context between runs', () => {
       let value1: string | undefined;
       let value2: string | undefined;
-      
+
       AsyncContext.run(() => {
         AsyncContext.set('key', 'value1');
         value1 = AsyncContext.get('key') as string;
       });
-      
+
       AsyncContext.run(() => {
         AsyncContext.set('key', 'value2');
         value2 = AsyncContext.get('key') as string;
       });
-      
+
       expect(value1).toBe('value1');
       expect(value2).toBe('value2');
     });
 
     it('should accept initial data', () => {
       let captured: { correlationId?: string; userId?: number } = {};
-      
+
       AsyncContext.run(
         () => {
           captured = {
@@ -77,7 +77,7 @@ describe('AsyncContext', () => {
         },
         { correlationId: 'corr-123', userId: 456 }
       );
-      
+
       expect(captured.correlationId).toBe('corr-123');
       expect(captured.userId).toBe(456);
     });
@@ -86,41 +86,41 @@ describe('AsyncContext', () => {
   describe('runAsync (asynchronous)', () => {
     it('should propagate context in async operations', async () => {
       let captured: string | undefined;
-      
+
       await AsyncContext.runAsync(async () => {
         AsyncContext.set('correlationId', 'corr-123');
-        
+
         await Promise.resolve();
-        
+
         captured = AsyncContext.get('correlationId') as string;
       });
-      
+
       expect(captured).toBe('corr-123');
     });
 
     it('should isolate context between async runs', async () => {
       let value1: string | undefined;
       let value2: string | undefined;
-      
+
       await AsyncContext.runAsync(async () => {
         AsyncContext.set('key', 'value1');
         await Promise.resolve();
         value1 = AsyncContext.get('key') as string;
       });
-      
+
       await AsyncContext.runAsync(async () => {
         AsyncContext.set('key', 'value2');
         await Promise.resolve();
         value2 = AsyncContext.get('key') as string;
       });
-      
+
       expect(value1).toBe('value1');
       expect(value2).toBe('value2');
     });
 
     it('should accept initial data in async context', async () => {
       let captured: { correlationId?: string } = {};
-      
+
       await AsyncContext.runAsync(
         async () => {
           await Promise.resolve();
@@ -130,23 +130,23 @@ describe('AsyncContext', () => {
         },
         { correlationId: 'corr-123' }
       );
-      
+
       expect(captured.correlationId).toBe('corr-123');
     });
 
     it('should maintain context across multiple awaits', async () => {
       const values: string[] = [];
-      
+
       await AsyncContext.runAsync(async () => {
         AsyncContext.set('correlationId', 'corr-123');
-        
+
         await Promise.resolve();
         values.push(AsyncContext.get('correlationId') as string);
-        
+
         await Promise.resolve();
         values.push(AsyncContext.get('correlationId') as string);
       });
-      
+
       expect(values).toEqual(['corr-123', 'corr-123']);
     });
   });
@@ -163,11 +163,11 @@ describe('AsyncContext', () => {
       // Disable auto-generate for this test
       const originalAutoGenerate = (AsyncContext as any).config.autoGenerate;
       (AsyncContext as any).config.autoGenerate = false;
-      
+
       AsyncContext.run(() => {
         expect(AsyncContext.getCorrelationId()).toBe('');
       });
-      
+
       // Restore
       (AsyncContext as any).config.autoGenerate = originalAutoGenerate;
     });
@@ -187,9 +187,9 @@ describe('AsyncContext', () => {
       AsyncContext.run(() => {
         AsyncContext.set('key1', 'value1');
         AsyncContext.set('key2', 'value2');
-        
+
         const all = AsyncContext.getAll();
-        
+
         expect(all.key1).toBe('value1');
         expect(all.key2).toBe('value2');
       });
@@ -208,7 +208,7 @@ describe('AsyncContext', () => {
       AsyncContext.run(() => {
         AsyncContext.set('key', 'value');
         AsyncContext.clear();
-        
+
         expect(AsyncContext.get('key')).toBeUndefined();
         expect(AsyncContext.getAll()).toEqual({});
       });
@@ -219,23 +219,22 @@ describe('AsyncContext', () => {
     it('should isolate nested context runs', () => {
       let outer: string | undefined;
       let inner: string | undefined;
-      
+
       AsyncContext.run(() => {
         AsyncContext.set('key', 'outer');
         outer = AsyncContext.get('key') as string;
-        
+
         AsyncContext.run(() => {
           AsyncContext.set('key', 'inner');
           inner = AsyncContext.get('key') as string;
         });
-        
+
         // Outer context should be preserved
         expect(AsyncContext.get('key')).toBe('outer');
       });
-      
+
       expect(outer).toBe('outer');
       expect(inner).toBe('inner');
     });
   });
 });
-

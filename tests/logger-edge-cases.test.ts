@@ -2,15 +2,15 @@
  * Tests for Logger edge cases to improve coverage
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Logger } from '../src/Logger';
-import { ArrayTransport } from '../src/transports/array';
+import { FieldFilter } from '../src/compliance/LoggingMatrix';
+import type { LoggingMatrix } from '../src/compliance/LoggingMatrix';
 import { createLogger } from '../src/index';
 import { MaskingEngine } from '../src/masking/MaskingEngine';
-import { SanitizationEngine } from '../src/sanitization/SanitizationEngine';
-import { FieldFilter } from '../src/compliance/LoggingMatrix';
 import type { MaskingRule } from '../src/masking/MaskingEngine';
-import type { LoggingMatrix } from '../src/compliance/LoggingMatrix';
+import { SanitizationEngine } from '../src/sanitization/SanitizationEngine';
+import { ArrayTransport } from '../src/transports/array';
 
 describe('Logger Edge Cases', () => {
   describe('Constructor Options', () => {
@@ -25,7 +25,7 @@ describe('Logger Edge Cases', () => {
         {},
         { loggingMatrix: matrix }
       );
-      
+
       expect(logger).toBeInstanceOf(Logger);
     });
 
@@ -39,9 +39,9 @@ describe('Logger Edge Cases', () => {
     it('should log empty message when no arguments provided', () => {
       const transport = new ArrayTransport();
       const logger = new Logger('test', transport, 'info');
-      
+
       logger.info();
-      
+
       const log = transport.getLastEntry();
       expect(log?.message).toBe('');
       expect(log?.level).toBe('info');
@@ -57,7 +57,7 @@ describe('Logger Edge Cases', () => {
         strategy: 'password' as any,
       });
       const sanitization = new SanitizationEngine(masking);
-      
+
       const logger = new Logger(
         'test',
         transport,
@@ -68,9 +68,9 @@ describe('Logger Edge Cases', () => {
           maskingEngine: masking,
         }
       );
-      
+
       logger.info({ password: 'secret123' }, 'User logged in');
-      
+
       const log = transport.getLastEntry();
       expect(log?.password).toBe('*'.repeat(9));
       expect(log?.message).toBe('User logged in');
@@ -81,7 +81,7 @@ describe('Logger Edge Cases', () => {
       const matrix: LoggingMatrix = {
         info: ['correlationId'],
       };
-      
+
       const logger = new Logger(
         'test',
         transport,
@@ -89,10 +89,10 @@ describe('Logger Edge Cases', () => {
         {},
         { loggingMatrix: matrix, useAsyncContext: true }
       );
-      
+
       // This would require AsyncContext to test properly
       logger.info({ correlationId: 'corr-123', secret: 'hidden' }, 'Test');
-      
+
       const log = transport.getLastEntry();
       expect(log).toBeDefined();
     });
@@ -105,13 +105,13 @@ describe('Logger Edge Cases', () => {
         pattern: /secret/i,
         strategy: 'password' as any,
       };
-      
+
       logger.reconfigure({ addMaskingRule: rule });
       logger.info({ secret: 'value123' }, 'Test');
-      
+
       // Should have created engine and applied masking
       // 'value123' has 8 characters, so should be 8 asterisks
-      const transport = logger['transport'] as ArrayTransport;
+      const transport = logger.transport as ArrayTransport;
       const log = transport.getLastEntry();
       expect(log?.secret).toBe('*'.repeat(8));
     });
@@ -121,10 +121,10 @@ describe('Logger Edge Cases', () => {
       const matrix: LoggingMatrix = {
         default: ['correlationId'],
       };
-      
+
       logger.reconfigure({ loggingMatrix: matrix });
-      
-      expect(logger['fieldFilter']).toBeInstanceOf(FieldFilter);
+
+      expect(logger.fieldFilter).toBeInstanceOf(FieldFilter);
     });
 
     it('should handle transport close error gracefully', async () => {
@@ -137,15 +137,15 @@ describe('Logger Edge Cases', () => {
         name: 'mock',
         isLevelEnabled: () => true,
       };
-      
+
       const logger = new Logger('test', mockTransport as any, 'info');
       const newTransport = new ArrayTransport();
-      
+
       logger.reconfigure({ transport: newTransport });
-      
+
       // Should not throw even if old transport close fails
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       logger.info('test');
       expect(newTransport.entries.length).toBe(1);
     });
@@ -161,9 +161,9 @@ describe('Logger Edge Cases', () => {
         name: 'mock',
         isLevelEnabled: () => true,
       };
-      
+
       const logger = new Logger('test', mockTransport as any, 'info');
-      
+
       // Should not throw
       expect(() => {
         logger.info('test message');
@@ -176,7 +176,7 @@ describe('Logger Edge Cases', () => {
       const transport = new ArrayTransport();
       transport.log('not-json-string');
       transport.log('{"valid": "json"}');
-      
+
       const parsed = transport.getParsedEntries();
       expect(parsed.length).toBe(1);
       expect(parsed[0]).toEqual({ valid: 'json' });
@@ -185,7 +185,7 @@ describe('Logger Edge Cases', () => {
     it('should handle getLastEntry with invalid JSON', () => {
       const transport = new ArrayTransport();
       transport.log('invalid-json-{');
-      
+
       const last = transport.getLastEntry();
       expect(last).toBeUndefined();
     });
@@ -202,14 +202,14 @@ describe('Logger Edge Cases', () => {
       const logger = createLogger({
         transport: 'unknown' as any,
       });
-      
+
       expect(logger).toBeInstanceOf(Logger);
     });
 
     it('should handle createLogger with all options', () => {
       const masking = new MaskingEngine({ enableDefaultRules: false });
       const matrix: LoggingMatrix = { default: ['correlationId'] };
-      
+
       const logger = createLogger({
         name: 'custom',
         level: 'debug',
@@ -218,11 +218,10 @@ describe('Logger Edge Cases', () => {
         useAsyncContext: false,
         loggingMatrix: matrix,
       });
-      
+
       expect(logger.name).toBe('custom');
       expect(logger.level).toBe('debug');
-      expect(logger['useAsyncContext']).toBe(false);
+      expect(logger.useAsyncContext).toBe(false);
     });
   });
 });
-

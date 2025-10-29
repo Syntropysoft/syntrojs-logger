@@ -2,8 +2,8 @@
  * Tests for log levels
  */
 
-import { describe, it, expect } from 'vitest';
-import { isLevelEnabled, LOG_LEVEL_WEIGHTS, logLevels } from '../src/levels';
+import { describe, expect, it } from 'vitest';
+import { LOG_LEVEL_WEIGHTS, isLevelEnabled, logLevels } from '../src/levels';
 import type { LogLevel } from '../src/levels';
 
 describe('Log Levels', () => {
@@ -43,9 +43,9 @@ describe('Log Levels', () => {
 
     it('should handle all level combinations', () => {
       const levels: LogLevel[] = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
-      
-      levels.forEach(configured => {
-        levels.forEach(logLevel => {
+
+      levels.forEach((configured) => {
+        levels.forEach((logLevel) => {
           const enabled = isLevelEnabled(logLevel, configured);
           const expected = LOG_LEVEL_WEIGHTS[logLevel] >= LOG_LEVEL_WEIGHTS[configured];
           expect(enabled).toBe(expected);
@@ -66,4 +66,3 @@ describe('Log Levels', () => {
     });
   });
 });
-

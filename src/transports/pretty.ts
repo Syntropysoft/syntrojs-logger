@@ -4,8 +4,8 @@
 
 import chalk from 'chalk';
 import type { LogEntry, LogLevel } from '../types';
-import { Transport, type TransportOptions } from './Transport';
 import { safeStringify } from '../utils/serialize';
+import { Transport, type TransportOptions } from './Transport';
 
 export class PrettyTransport extends Transport {
   private readonly levelColorMap: Record<Exclude<LogLevel, 'silent'>, any>;
@@ -28,7 +28,7 @@ export class PrettyTransport extends Transport {
     if (!logEntry) {
       return;
     }
-    
+
     // Guard clause: Level not enabled
     if (!this.isLevelEnabled(logEntry.level)) {
       return;
@@ -36,27 +36,27 @@ export class PrettyTransport extends Transport {
 
     const timestamp = (logEntry as any).time || logEntry.timestamp;
     const { level, message, service, time: _, timestamp: __, ...rest } = logEntry;
-    
+
     const colorizer = this.levelColorMap[level as Exclude<LogLevel, 'silent'>] || chalk.white;
-    
+
     // timestamp can be number (Date.now()) or string (ISO)
     // Guard clause: Handle invalid timestamps
     const date = timestamp ? new Date(timestamp) : new Date();
-    const timeStr = isNaN(date.getTime()) 
+    const timeStr = Number.isNaN(date.getTime())
       ? chalk.gray(`[${new Date().toISOString()}]`)
       : chalk.gray(`[${date.toISOString()}]`);
     const levelString = colorizer(`[${level.toUpperCase()}]`);
     const serviceString = service ? chalk.cyan(`(${service})`) : '';
-    
+
     let logString = `${timeStr} ${levelString} ${serviceString}: ${message}`;
-    
+
     // Add metadata if present
     const metaKeys = Object.keys(rest);
     if (metaKeys.length > 0) {
       const metaString = chalk.gray(safeStringify(rest));
       logString += `\n${metaString}`;
     }
-    
+
     console.log(logString);
   }
 
@@ -70,7 +70,7 @@ export class PrettyTransport extends Transport {
     if (typeof entry !== 'string') {
       return entry;
     }
-    
+
     // Guard clause: Try to parse JSON string
     try {
       return JSON.parse(entry);
@@ -81,4 +81,3 @@ export class PrettyTransport extends Transport {
     }
   }
 }
-

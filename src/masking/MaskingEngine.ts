@@ -1,7 +1,7 @@
 /**
  * FILE: src/masking/MaskingEngine.ts
  * DESCRIPTION: Ultra-fast data masking engine using JSON flattening strategy.
- * 
+ *
  * This engine processes nested objects recursively, applying masking rules
  * to sensitive data fields based on pattern matching.
  */
@@ -12,66 +12,64 @@
  */
 function isSafeRegexBasic(pattern: string | RegExp): boolean {
   const patternStr = pattern instanceof RegExp ? pattern.source : pattern;
-  
+
   // Empty pattern is safe
   if (!patternStr) return true;
-  
+
   // Patterns that commonly cause ReDoS (catastrophic backtracking)
   const dangerousPatterns = [
     // Nested quantifiers: (a+)+, (a*)*, (a?)+, etc.
     /\([^)]*\+(?:\+|\*|\?)\)[\+\*]/,
     /\([^)]*\*(?:\+|\*|\?)\)[\+\*]/,
     /\([^)]*\?(?:\+|\*|\?)\)[\+\*]/,
-    
+
     // Quantifier on quantifier: ++, **, ?+, etc.
     /[\+\*]\s*[\+\*]/,
     /\?\s*[\+\*]/,
-    
+
     // Complex nested alternations that can cause exponential backtracking
     // Pattern like: (a|ab)+ or (a|a)*
     /\([^)]*\|\s*\w+\+\s*\|\s*\w+\)[\+\*]/,
-    
+
     // Repetition followed by complex alternation
     /\([^)]*\)[\+\*]\s*[\(\)\|\+\*]{5,}/,
   ];
-  
+
   // Functional approach: Check for dangerous patterns using some()
-  const hasDangerousPattern = dangerousPatterns.some(pattern => 
-    pattern.test(patternStr)
-  );
-  
+  const hasDangerousPattern = dangerousPatterns.some((pattern) => pattern.test(patternStr));
+
   // Guard clause: Dangerous pattern found
   if (hasDangerousPattern) {
     return false;
   }
-  
+
   // Guard clause: Count nested groups with quantifiers (heuristic)
   // Patterns with many nested quantifiers are suspicious
   const nestedQuantifierMatches = patternStr.match(/\([^)]*[\+\*]\?\)[\+\*]/g);
   if (nestedQuantifierMatches && nestedQuantifierMatches.length > 2) {
     return false; // Too many nested quantifiers = potentially dangerous
   }
-  
+
   // Guard clause: Check for exponential backtracking patterns
   // Pattern like: (a|a)+ or (a|aa)+ with repetition
   if (/\([^)]*\|\s*[^)]+\)[\+\*]{2,}/.test(patternStr)) {
     return false;
   }
-  
+
   // All checks passed - pattern is safe
   return true;
 }
 
 /**
  * Validates if a regex pattern is safe from ReDoS (Regular Expression Denial of Service) attacks.
- * 
+ *
  * Uses hybrid approach:
  * 1. Tries to use `safe-regex` package if available (optional dependency)
  * 2. Falls back to basic validation if `safe-regex` is not installed
- * 
+ *
  * This allows users to opt-in for more robust validation by installing `safe-regex`,
  * while still providing protection without additional dependencies.
- * 
+ *
  * @param pattern - Regex pattern as string or RegExp object
  * @returns true if pattern appears safe, false if potentially dangerous
  */
@@ -81,12 +79,13 @@ function isSafeRegex(pattern: string | RegExp): boolean {
     // Use dynamic import to avoid breaking if package is not installed
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const safeRegex = require('safe-regex');
-    
+
     if (typeof safeRegex === 'function') {
       // safe-regex is a function
       const patternToCheck = pattern instanceof RegExp ? pattern : new RegExp(pattern);
       return safeRegex(patternToCheck);
-    } else if (typeof safeRegex.default === 'function') {
+    }
+    if (typeof safeRegex.default === 'function') {
       // safe-regex has default export
       const patternToCheck = pattern instanceof RegExp ? pattern : new RegExp(pattern);
       return safeRegex.default(patternToCheck);
@@ -94,7 +93,7 @@ function isSafeRegex(pattern: string | RegExp): boolean {
   } catch {
     // safe-regex not available, continue to fallback
   }
-  
+
   // Fallback: Use basic validation
   return isSafeRegexBasic(pattern);
 }
@@ -110,7 +109,7 @@ export enum MaskingStrategy {
   PHONE = 'phone',
   PASSWORD = 'password',
   TOKEN = 'token',
-  CUSTOM = 'custom'
+  CUSTOM = 'custom',
 }
 
 /**
@@ -150,7 +149,7 @@ export interface MaskingEngineOptions {
 /**
  * @class MaskingEngine
  * Ultra-fast data masking engine.
- * 
+ *
  * Processes nested objects recursively and applies masking rules
  * to sensitive data fields based on pattern matching.
  */
@@ -162,7 +161,7 @@ export class MaskingEngine {
   /** @private Whether to preserve original length by default */
   private readonly preserveLength: boolean;
   /** @private Whether the engine is initialized */
-  private initialized: boolean = false;
+  private initialized = false;
   /** @private Strategy map: Dictionary of masking functions (functional approach) */
   private readonly strategyMap: Map<MaskingStrategy, (value: string, rule: MaskingRule) => string>;
 
@@ -170,7 +169,7 @@ export class MaskingEngine {
     // Functional approach: Nullish coalescing for defaults
     this.maskChar = options?.maskChar ?? '*';
     this.preserveLength = options?.preserveLength ?? true; // Default to true for security
-    
+
     // Initialize strategy map (functional approach: dictionary instead of switch)
     this.strategyMap = this.initializeStrategyMap();
 
@@ -180,7 +179,7 @@ export class MaskingEngine {
     }
 
     // Functional approach: Add custom rules from options (guard clause pattern)
-    options?.rules?.forEach(rule => {
+    options?.rules?.forEach((rule) => {
       this.addRule(rule);
     });
   }
@@ -195,42 +194,42 @@ export class MaskingEngine {
         pattern: /credit_card|card_number|payment_number/i,
         strategy: MaskingStrategy.CREDIT_CARD,
         preserveLength: false, // Use fixed format for default rule
-        maskChar: this.maskChar
+        maskChar: this.maskChar,
       },
       {
         pattern: /ssn|social_security|security_number/i,
         strategy: MaskingStrategy.SSN,
         preserveLength: true,
-        maskChar: this.maskChar
+        maskChar: this.maskChar,
       },
       {
         pattern: /email/i,
         strategy: MaskingStrategy.EMAIL,
         preserveLength: true,
-        maskChar: this.maskChar
+        maskChar: this.maskChar,
       },
       {
         pattern: /phone|phone_number|mobile_number/i,
         strategy: MaskingStrategy.PHONE,
         preserveLength: true,
-        maskChar: this.maskChar
+        maskChar: this.maskChar,
       },
       {
         pattern: /password|pass|pwd|secret/i,
         strategy: MaskingStrategy.PASSWORD,
         preserveLength: true,
-        maskChar: this.maskChar
+        maskChar: this.maskChar,
       },
       {
         pattern: /token|api_key|auth_token|jwt|bearer/i,
         strategy: MaskingStrategy.TOKEN,
         preserveLength: true,
-        maskChar: this.maskChar
-      }
+        maskChar: this.maskChar,
+      },
     ];
 
     // Functional approach: add all default rules
-    defaultRules.forEach(rule => {
+    defaultRules.forEach((rule) => {
       this.addRule(rule);
     });
   }
@@ -244,10 +243,9 @@ export class MaskingEngine {
     // Validate regex to prevent ReDoS attacks
     // Uses safe-regex if available (optional dependency), otherwise uses basic validation
     if (!isSafeRegex(rule.pattern)) {
-      const patternStr = rule.pattern instanceof RegExp 
-        ? rule.pattern.source 
-        : String(rule.pattern);
-      
+      const patternStr =
+        rule.pattern instanceof RegExp ? rule.pattern.source : String(rule.pattern);
+
       // Check if safe-regex is available to provide more specific error
       let validationMethod = 'basic validation';
       try {
@@ -257,19 +255,15 @@ export class MaskingEngine {
       } catch {
         // safe-regex not available, using basic validation
       }
-      
+
       throw new Error(
-        `[MaskingEngine] Unsafe regex pattern detected: "${patternStr}". ` +
-        `This pattern could cause ReDoS (Regular Expression Denial of Service) attacks. ` +
-        `Please review and simplify the pattern to avoid nested quantifiers and exponential backtracking. ` +
-        `(Validated using: ${validationMethod})`
+        `[MaskingEngine] Unsafe regex pattern detected: "${patternStr}". This pattern could cause ReDoS (Regular Expression Denial of Service) attacks. Please review and simplify the pattern to avoid nested quantifiers and exponential backtracking. (Validated using: ${validationMethod})`
       );
     }
-    
+
     // Functional approach: Compile regex pattern (guard clause pattern)
-    rule._compiledPattern = typeof rule.pattern === 'string'
-      ? new RegExp(rule.pattern, 'i')
-      : rule.pattern;
+    rule._compiledPattern =
+      typeof rule.pattern === 'string' ? new RegExp(rule.pattern, 'i') : rule.pattern;
 
     // Functional approach: Set defaults using nullish coalescing
     rule.preserveLength = rule.preserveLength ?? this.preserveLength;
@@ -292,10 +286,10 @@ export class MaskingEngine {
     try {
       // Apply masking rules directly to the data structure
       const masked = this.applyMaskingRules(meta);
-      
+
       // Return the masked data
       return masked;
-    } catch (error) {
+    } catch (_error) {
       // Silent observer - return original data if masking fails
       return meta;
     }
@@ -308,7 +302,7 @@ export class MaskingEngine {
    * @returns Masked data
    * @private
    */
-  private applyMaskingRules(data: any): any {
+  private applyMaskingRules(data: unknown): unknown {
     // Guard clause: Primitive or null - return as-is
     if (data === null || typeof data !== 'object') {
       return data;
@@ -316,30 +310,28 @@ export class MaskingEngine {
 
     // Guard clause: Array - use functional map
     if (Array.isArray(data)) {
-      return data.map(item => this.applyMaskingRules(item));
+      return data.map((item) => this.applyMaskingRules(item));
     }
 
     // Functional approach: use Object.keys + reduce for immutability
     return Object.keys(data)
-      .filter(key => Object.prototype.hasOwnProperty.call(data, key))
+      .filter((key) => Object.prototype.hasOwnProperty.call(data, key))
       .reduce<Record<string, any>>((masked, key) => {
         const value = data[key];
-        
+
         // Guard clause: String value - apply masking rules
         if (typeof value === 'string') {
           const matchingRule = this.findMatchingRule(key);
-          masked[key] = matchingRule 
-            ? this.applyStrategy(value, matchingRule)
-            : value;
+          masked[key] = matchingRule ? this.applyStrategy(value, matchingRule) : value;
           return masked;
         }
-        
+
         // Guard clause: Nested object - recursive masking
         if (typeof value === 'object' && value !== null) {
           masked[key] = this.applyMaskingRules(value);
           return masked;
         }
-        
+
         // Guard clause: Other types - keep as-is
         masked[key] = value;
         return masked;
@@ -354,22 +346,23 @@ export class MaskingEngine {
    * @private
    */
   private findMatchingRule(key: string): MaskingRule | undefined {
-    return this.rules.find(rule => 
-      rule._compiledPattern && rule._compiledPattern.test(key)
-    );
+    return this.rules.find((rule) => rule._compiledPattern?.test(key));
   }
 
   /**
    * Initialize strategy map with all masking functions.
    * Functional approach: Data dictionary instead of switch statements.
    * Pure functions stored in a Map for O(1) lookup.
-   * 
+   *
    * @returns Map of strategy enum to masking function
    * @private
    */
-  private initializeStrategyMap(): Map<MaskingStrategy, (value: string, rule: MaskingRule) => string> {
+  private initializeStrategyMap(): Map<
+    MaskingStrategy,
+    (value: string, rule: MaskingRule) => string
+  > {
     const strategies = new Map<MaskingStrategy, (value: string, rule: MaskingRule) => string>();
-    
+
     // Pure functions: Each strategy is a function that can be stored in a map
     strategies.set(MaskingStrategy.CREDIT_CARD, (value, rule) => this.maskCreditCard(value, rule));
     strategies.set(MaskingStrategy.SSN, (value, rule) => this.maskSSN(value, rule));
@@ -377,7 +370,7 @@ export class MaskingEngine {
     strategies.set(MaskingStrategy.PHONE, (value, rule) => this.maskPhone(value, rule));
     strategies.set(MaskingStrategy.PASSWORD, (value, rule) => this.maskPassword(value, rule));
     strategies.set(MaskingStrategy.TOKEN, (value, rule) => this.maskToken(value, rule));
-    
+
     return strategies;
   }
 
@@ -386,7 +379,7 @@ export class MaskingEngine {
    * Functional approach: Uses dictionary lookup instead of switch statement.
    * Pure function pattern: No side effects, predictable output.
    * Single Responsibility: Only applies masking strategies.
-   * 
+   *
    * @param value - Value to mask
    * @param rule - Masking rule to apply
    * @returns Masked value
@@ -400,12 +393,12 @@ export class MaskingEngine {
 
     // Functional approach: Dictionary lookup instead of switch
     const masker = this.strategyMap.get(rule.strategy);
-    
+
     // Guard clause: Strategy not found, use default
     if (!masker) {
       return this.maskDefault(value, rule);
     }
-    
+
     // Apply strategy function (functional composition)
     return masker(value, rule);
   }
@@ -414,7 +407,7 @@ export class MaskingEngine {
    * Masks credit card number.
    * Uses guard clause pattern for preserveLength option.
    * Single Responsibility: Only masks credit cards.
-   * 
+   *
    * @param value - Credit card number
    * @param rule - Masking rule
    * @returns Masked credit card
@@ -423,7 +416,7 @@ export class MaskingEngine {
   private maskCreditCard(value: string, rule: MaskingRule): string {
     const clean = value.replace(/\D/g, '');
     const maskChar = rule.maskChar ?? this.maskChar;
-    
+
     // Guard clause: Preserve original format
     if (rule.preserveLength) {
       return value.replace(/\d/g, (match, offset) => {
@@ -431,7 +424,7 @@ export class MaskingEngine {
         return digitIndex < clean.length - 4 ? maskChar : match;
       });
     }
-    
+
     // Fixed format: ****-****-****-1111
     return `${maskChar.repeat(4)}-${maskChar.repeat(4)}-${maskChar.repeat(4)}-${clean.slice(-4)}`;
   }
@@ -440,7 +433,7 @@ export class MaskingEngine {
    * Masks SSN.
    * Uses guard clause pattern for preserveLength option.
    * Single Responsibility: Only masks SSNs.
-   * 
+   *
    * @param value - SSN
    * @param rule - Masking rule
    * @returns Masked SSN
@@ -448,7 +441,7 @@ export class MaskingEngine {
    */
   private maskSSN(value: string, rule: MaskingRule): string {
     const clean = value.replace(/\D/g, '');
-    
+
     // Guard clause: Preserve original format
     if (rule.preserveLength) {
       const maskChar = rule.maskChar ?? this.maskChar;
@@ -457,7 +450,7 @@ export class MaskingEngine {
         return digitIndex < clean.length - 4 ? maskChar : match;
       });
     }
-    
+
     // Fixed format: ***-**-6789
     return `***-**-${clean.slice(-4)}`;
   }
@@ -466,7 +459,7 @@ export class MaskingEngine {
    * Masks email address.
    * Functional approach: Pure function with guard clauses.
    * Single Responsibility: Only masks emails.
-   * 
+   *
    * @param value - Email address
    * @param rule - Masking rule
    * @returns Masked email
@@ -474,26 +467,27 @@ export class MaskingEngine {
    */
   private maskEmail(value: string, rule: MaskingRule): string {
     const atIndex = value.indexOf('@');
-    
+
     // Guard clause: Invalid email format (no @ or @ at start)
     if (atIndex <= 0) {
       return this.maskDefault(value, rule);
     }
-    
+
     // Functional decomposition: Extract parts
     const username = value.substring(0, atIndex);
     const domain = value.substring(atIndex);
     const maskChar = rule.maskChar ?? this.maskChar;
-    
+
     // Guard clause: Preserve original format
     if (rule.preserveLength) {
       // Functional approach: Build masked username using ternary operator
-      const maskedUsername = username.length > 1 
-        ? username.charAt(0) + maskChar.repeat(username.length - 1)
-        : maskChar.repeat(username.length);
+      const maskedUsername =
+        username.length > 1
+          ? username.charAt(0) + maskChar.repeat(username.length - 1)
+          : maskChar.repeat(username.length);
       return maskedUsername + domain;
     }
-    
+
     // Fixed format: first char + *** + domain
     return `${username.charAt(0)}***${domain}`;
   }
@@ -502,7 +496,7 @@ export class MaskingEngine {
    * Masks phone number.
    * Functional approach: Pure function with guard clauses.
    * Single Responsibility: Only masks phone numbers.
-   * 
+   *
    * @param value - Phone number
    * @param rule - Masking rule
    * @returns Masked phone number
@@ -511,7 +505,7 @@ export class MaskingEngine {
   private maskPhone(value: string, rule: MaskingRule): string {
     const clean = value.replace(/\D/g, '');
     const maskChar = rule.maskChar ?? this.maskChar;
-    
+
     // Guard clause: Preserve original format
     if (rule.preserveLength) {
       // Functional approach: Use replace with callback
@@ -520,7 +514,7 @@ export class MaskingEngine {
         return digitIndex < clean.length - 4 ? maskChar : match;
       });
     }
-    
+
     // Fixed format: ***-***-4567 (functional composition)
     return `${maskChar.repeat(3)}-${maskChar.repeat(3)}-${clean.slice(-4)}`;
   }
@@ -529,7 +523,7 @@ export class MaskingEngine {
    * Masks password.
    * Functional approach: Pure function - simplest strategy.
    * Single Responsibility: Only masks passwords.
-   * 
+   *
    * @param value - Password
    * @param rule - Masking rule
    * @returns Masked password
@@ -545,7 +539,7 @@ export class MaskingEngine {
    * Masks token.
    * Functional approach: Pure function with guard clauses.
    * Single Responsibility: Only masks tokens.
-   * 
+   *
    * @param value - Token
    * @param rule - Masking rule
    * @returns Masked token
@@ -553,27 +547,31 @@ export class MaskingEngine {
    */
   private maskToken(value: string, rule: MaskingRule): string {
     const maskChar = rule.maskChar ?? this.maskChar;
-    
+
     // Guard clause: Preserve original format
     if (rule.preserveLength) {
       // Functional composition: first 4 + mask + last 5
-      return value.substring(0, 4) + maskChar.repeat(value.length - 9) + value.substring(value.length - 5);
+      return (
+        value.substring(0, 4) +
+        maskChar.repeat(value.length - 9) +
+        value.substring(value.length - 5)
+      );
     }
-    
+
     // Guard clause: Short token - mask entirely
     if (value.length <= 8) {
       return maskChar.repeat(value.length);
     }
-    
+
     // Long token: first 4 + ... + last 5 (functional composition)
-    return value.substring(0, 4) + '...' + value.substring(value.length - 5);
+    return `${value.substring(0, 4)}...${value.substring(value.length - 5)}`;
   }
 
   /**
    * Default masking strategy.
    * Functional approach: Pure function with guard clauses.
    * Single Responsibility: Only provides default masking.
-   * 
+   *
    * @param value - Value to mask
    * @param rule - Masking rule
    * @returns Masked value
@@ -581,12 +579,12 @@ export class MaskingEngine {
    */
   private maskDefault(value: string, rule: MaskingRule): string {
     const maskChar = rule.maskChar ?? this.maskChar;
-    
+
     // Guard clause: Preserve original length
     if (rule.preserveLength) {
       return maskChar.repeat(value.length);
     }
-    
+
     // Default: Mask up to 8 characters (functional: Math.min for upper bound)
     return maskChar.repeat(Math.min(value.length, 8));
   }
@@ -599,12 +597,18 @@ export class MaskingEngine {
     return {
       initialized: this.initialized,
       totalRules: this.rules.length,
-      defaultRules: this.rules.filter(r => 
-        [MaskingStrategy.CREDIT_CARD, MaskingStrategy.SSN, MaskingStrategy.EMAIL, 
-         MaskingStrategy.PHONE, MaskingStrategy.PASSWORD, MaskingStrategy.TOKEN].includes(r.strategy)
+      defaultRules: this.rules.filter((r) =>
+        [
+          MaskingStrategy.CREDIT_CARD,
+          MaskingStrategy.SSN,
+          MaskingStrategy.EMAIL,
+          MaskingStrategy.PHONE,
+          MaskingStrategy.PASSWORD,
+          MaskingStrategy.TOKEN,
+        ].includes(r.strategy)
       ).length,
-      customRules: this.rules.filter(r => r.strategy === MaskingStrategy.CUSTOM).length,
-      strategies: this.rules.map(r => r.strategy)
+      customRules: this.rules.filter((r) => r.strategy === MaskingStrategy.CUSTOM).length,
+      strategies: this.rules.map((r) => r.strategy),
     };
   }
 

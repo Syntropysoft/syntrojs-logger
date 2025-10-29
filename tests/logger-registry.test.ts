@@ -3,7 +3,7 @@
  * Tests for singleton registry pattern
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { loggerRegistry as LoggerRegistry } from '../src/LoggerRegistry';
 
 describe('LoggerRegistry', () => {
@@ -15,7 +15,7 @@ describe('LoggerRegistry', () => {
   describe('getLogger', () => {
     it('should create and return logger if not exists', () => {
       const logger = LoggerRegistry.getLogger('test-logger');
-      
+
       expect(logger).toBeDefined();
       expect(logger.name).toBe('test-logger');
     });
@@ -23,7 +23,7 @@ describe('LoggerRegistry', () => {
     it('should return cached logger if exists', () => {
       const logger1 = LoggerRegistry.getLogger('cached');
       const logger2 = LoggerRegistry.getLogger('cached');
-      
+
       expect(logger1).toBe(logger2);
     });
 
@@ -31,13 +31,13 @@ describe('LoggerRegistry', () => {
       const logger = LoggerRegistry.getLogger('custom', {
         level: 'debug',
       });
-      
+
       expect(logger.level).toBe('debug');
     });
 
     it('should use default level if not specified', () => {
       const logger = LoggerRegistry.getLogger('default');
-      
+
       expect(logger.level).toBe('info');
     });
   });
@@ -62,7 +62,7 @@ describe('LoggerRegistry', () => {
       LoggerRegistry.getLogger('logger1');
       LoggerRegistry.getLogger('logger2');
       LoggerRegistry.getLogger('logger3');
-      
+
       const names = LoggerRegistry.getLoggerNames();
       expect(names).toContain('logger1');
       expect(names).toContain('logger2');
@@ -75,7 +75,7 @@ describe('LoggerRegistry', () => {
     it('should remove logger from registry', () => {
       LoggerRegistry.getLogger('to-remove');
       expect(LoggerRegistry.hasLogger('to-remove')).toBe(true);
-      
+
       LoggerRegistry.removeLogger('to-remove');
       expect(LoggerRegistry.hasLogger('to-remove')).toBe(false);
     });
@@ -91,11 +91,11 @@ describe('LoggerRegistry', () => {
     it('should remove all loggers', () => {
       LoggerRegistry.getLogger('logger1');
       LoggerRegistry.getLogger('logger2');
-      
+
       expect(LoggerRegistry.getLoggerNames().length).toBe(2);
-      
+
       LoggerRegistry.clear();
-      
+
       expect(LoggerRegistry.getLoggerNames().length).toBe(0);
     });
   });
@@ -109,9 +109,9 @@ describe('LoggerRegistry', () => {
     it('should return all registered loggers', () => {
       const logger1 = LoggerRegistry.getLogger('logger1');
       const logger2 = LoggerRegistry.getLogger('logger2');
-      
+
       const all = LoggerRegistry.getAllLoggers();
-      
+
       expect(all.logger1).toBe(logger1);
       expect(all.logger2).toBe(logger2);
       expect(Object.keys(all).length).toBe(2);
@@ -122,7 +122,7 @@ describe('LoggerRegistry', () => {
     it('should maintain separate loggers with same options', () => {
       const logger1 = LoggerRegistry.getLogger('same', { level: 'debug' });
       const logger2 = LoggerRegistry.getLogger('same', { level: 'debug' });
-      
+
       expect(logger1).toBe(logger2);
       expect(logger1.level).toBe('debug');
     });
@@ -130,10 +130,9 @@ describe('LoggerRegistry', () => {
     it('should ignore options for existing logger', () => {
       const logger1 = LoggerRegistry.getLogger('existing', { level: 'debug' });
       const logger2 = LoggerRegistry.getLogger('existing', { level: 'error' });
-      
+
       expect(logger1).toBe(logger2);
       expect(logger1.level).toBe('debug'); // First options should persist
     });
   });
 });
-

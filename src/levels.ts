@@ -22,7 +22,6 @@ export const logLevels = Object.keys(LOG_LEVEL_WEIGHTS) as LogLevel[];
 export function isLevelEnabled(logLevel: LogLevel, configuredLevel: LogLevel): boolean {
   if (configuredLevel === 'silent') return false;
   if (logLevel === 'silent') return false;
-  
+
   return LOG_LEVEL_WEIGHTS[logLevel] >= LOG_LEVEL_WEIGHTS[configuredLevel];
 }
-

@@ -1,6 +1,6 @@
 /**
  * Array Transport - For testing purposes
- * 
+ *
  * Writes log entries to an array instead of console/stdout.
  * Perfect for tests as it's fast and allows easy inspection of logs.
  */
@@ -11,10 +11,6 @@ import { Transport, type TransportOptions } from './Transport';
 export class ArrayTransport extends Transport {
   /** Array to store log entries (functional: readonly from outside, mutable internally) */
   public readonly entries: string[] = [];
-
-  constructor(options?: TransportOptions) {
-    super(options);
-  }
 
   /**
    * Log entry to array (Single Responsibility).
@@ -38,11 +34,9 @@ export class ArrayTransport extends Transport {
         return;
       }
     }
-    
+
     // Functional approach: Single expression using ternary
-    const output = typeof entry === 'string' 
-      ? entry 
-      : JSON.stringify(entry);
+    const output = typeof entry === 'string' ? entry : JSON.stringify(entry);
     this.entries.push(output);
   }
 
@@ -60,7 +54,7 @@ export class ArrayTransport extends Transport {
    */
   getParsedEntries<T = LogEntry>(): T[] {
     return this.entries
-      .map(entry => {
+      .map((entry) => {
         try {
           return JSON.parse(entry) as T;
         } catch {
@@ -77,7 +71,7 @@ export class ArrayTransport extends Transport {
   getLastEntry<T = LogEntry>(): T | undefined {
     const lastEntry = this.entries[this.entries.length - 1];
     if (!lastEntry) return undefined;
-    
+
     try {
       return JSON.parse(lastEntry) as T;
     } catch {
@@ -85,4 +79,3 @@ export class ArrayTransport extends Transport {
     }
   }
 }
-

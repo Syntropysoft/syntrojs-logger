@@ -1,11 +1,11 @@
 /**
  * Composite Transport - Send logs to multiple transports simultaneously
- * 
+ *
  * Useful for logging to console AND file AND OpenTelemetry at the same time
  */
 
-import type { Transport } from './Transport';
 import type { LogEntry } from '../types';
+import type { Transport } from './Transport';
 import { Transport as BaseTransport } from './Transport';
 
 export class CompositeTransport extends BaseTransport {
@@ -19,7 +19,7 @@ export class CompositeTransport extends BaseTransport {
   log(entry: LogEntry): void {
     // Send to all transports (Silent Observer pattern - functional approach)
     // Functional: all transports receive the log, failures don't interrupt
-    this.transports.forEach(transport => {
+    this.transports.forEach((transport) => {
       this.writeToTransport(transport, entry);
     });
   }
@@ -38,15 +38,10 @@ export class CompositeTransport extends BaseTransport {
   }
 
   async flush(): Promise<void> {
-    await Promise.allSettled(
-      this.transports.map(t => t.flush?.() || Promise.resolve())
-    );
+    await Promise.allSettled(this.transports.map((t) => t.flush?.() || Promise.resolve()));
   }
 
   async close(): Promise<void> {
-    await Promise.allSettled(
-      this.transports.map(t => t.close?.() || Promise.resolve())
-    );
+    await Promise.allSettled(this.transports.map((t) => t.close?.() || Promise.resolve()));
   }
 }
-

@@ -2,8 +2,8 @@
  * Tests for Fluent API methods
  */
 
-import { describe, it, expect } from 'vitest';
-import { createLogger, type LogRetentionRules } from '../src/index';
+import { describe, expect, it } from 'vitest';
+import { type LogRetentionRules, createLogger } from '../src/index';
 import { ArrayTransport } from '../src/transports/array';
 
 describe('Fluent API', () => {
@@ -57,9 +57,7 @@ describe('Fluent API', () => {
 
     it('should allow chaining with other fluent methods', () => {
       const logger = createLogger({ name: 'test' });
-      const chainedLogger = logger
-        .withSource('api')
-        .withTransactionId('tx-123');
+      const chainedLogger = logger.withSource('api').withTransactionId('tx-123');
 
       expect(chainedLogger).not.toBe(logger);
     });
@@ -199,9 +197,7 @@ describe('Fluent API', () => {
         level: 'debug',
       });
 
-      const childLogger = parentLogger
-        .withSource('child')
-        .withTransactionId('tx-1');
+      const childLogger = parentLogger.withSource('child').withTransactionId('tx-1');
 
       expect(childLogger.name).toBe(parentLogger.name);
       expect(childLogger.level).toBe(parentLogger.level);
@@ -239,4 +235,3 @@ describe('Fluent API', () => {
     });
   });
 });
-
