@@ -1,4 +1,9 @@
+[![@syntrojs/logger](https://raw.githubusercontent.com/Syntropysoft/sintrojs-logger/main/assets/beaconLog-2.png)](https://github.com/Syntropysoft/sintrojs-logger)
+
 # @syntrojs/logger
+
+> ⚠️ **ALPHA VERSION** - This is a proof of concept. Use at your own risk.
+> We're actively developing tests, CI/CD, and more features.
 
 🔥 **Standalone logger** - Fast, simple, and developer-friendly logger for Node.js and Bun
 
@@ -17,7 +22,7 @@
 ## Installation
 
 ```bash
-npm install @syntrojs/logger
+npm install @syntrojs/logger@alpha
 ```
 
 ## Usage

@@ -1,7 +1,7 @@
 {
   "name": "@syntrojs/logger",
-  "version": "0.1.0",
-  "description": "🔥 Fast, simple, and developer-friendly logger for Node.js and Bun",
+  "version": "0.1.0-alpha",
+  "description": "🔥 Fast, simple, and developer-friendly logger for Node.js and Bun (ALPHA - Proof of Concept)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +18,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets"
   ],
   "scripts": {
     "build": "tsup",
@@ -42,7 +43,9 @@
     "lightweight",
     "console",
     "nodejs",
-    "bun"
+    "bun",
+    "alpha",
+    "proof-of-concept"
   ],
   "author": "SyntropySoft",
   "license": "Apache-2.0",
