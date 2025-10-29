@@ -6,7 +6,7 @@
  */
 
 import type { LogEntry } from '../types';
-import { Transport, type TransportOptions } from './Transport';
+import { Transport } from './Transport';
 
 export class ArrayTransport extends Transport {
   /** Array to store log entries (functional: readonly from outside, mutable internally) */

@@ -33,9 +33,17 @@ export class SanitizationEngine {
   public process(meta: Record<string, unknown>): Record<string, unknown> {
     let sanitized = this.sanitizeRecursively(meta);
     if (this.maskingEngine) {
-      sanitized = this.maskingEngine.process(sanitized);
+      // Ensure sanitized is a Record before passing to masking engine
+      const sanitizedRecord =
+        typeof sanitized === 'object' && sanitized !== null && !Array.isArray(sanitized)
+          ? (sanitized as Record<string, unknown>)
+          : meta;
+      sanitized = this.maskingEngine.process(sanitizedRecord);
     }
-    return sanitized;
+    // Ensure return type is Record
+    return typeof sanitized === 'object' && sanitized !== null && !Array.isArray(sanitized)
+      ? (sanitized as Record<string, unknown>)
+      : meta;
   }
 
   /**

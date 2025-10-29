@@ -287,8 +287,10 @@ export class MaskingEngine {
       // Apply masking rules directly to the data structure
       const masked = this.applyMaskingRules(meta);
 
-      // Return the masked data
-      return masked;
+      // Return the masked data (ensure it's a Record)
+      return typeof masked === 'object' && masked !== null && !Array.isArray(masked)
+        ? (masked as Record<string, unknown>)
+        : meta;
     } catch (_error) {
       // Silent observer - return original data if masking fails
       return meta;
@@ -314,10 +316,15 @@ export class MaskingEngine {
     }
 
     // Functional approach: use Object.keys + reduce for immutability
-    return Object.keys(data)
-      .filter((key) => Object.prototype.hasOwnProperty.call(data, key))
-      .reduce<Record<string, any>>((masked, key) => {
-        const value = data[key];
+    // Type guard: ensure data is a plain object
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      return data;
+    }
+    const dataRecord = data as Record<string, unknown>;
+    return Object.keys(dataRecord)
+      .filter((key) => Object.prototype.hasOwnProperty.call(dataRecord, key))
+      .reduce<Record<string, unknown>>((masked, key) => {
+        const value = dataRecord[key];
 
         // Guard clause: String value - apply masking rules
         if (typeof value === 'string') {

@@ -204,4 +204,12 @@ export class AsyncContext {
   static isActive(): boolean {
     return AsyncContext.storage.getStore() !== undefined;
   }
+
+  /**
+   * Get the current context store (Map instance)
+   * @internal Used by Logger for efficient context iteration
+   */
+  static getStore(): Map<string, unknown> | undefined {
+    return AsyncContext.storage.getStore();
+  }
 }

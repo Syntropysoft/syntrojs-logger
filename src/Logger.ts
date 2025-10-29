@@ -173,7 +173,7 @@ export class Logger {
       return { store: undefined, hasContext: false };
     }
 
-    const store = AsyncContext.storage.getStore();
+    const store = AsyncContext.getStore();
     const hasContext = !!store && store.size > 0;
 
     return { store, hasContext };
