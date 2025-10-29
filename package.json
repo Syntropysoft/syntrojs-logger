@@ -27,6 +27,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:mutation": "stryker run",
     "benchmark": "node benchmark.js",
     "benchmark:bun": "bun benchmark.js",
     "benchmark:compare": "node compare-benchmarks.js",
@@ -62,7 +63,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.5.3",
+    "@stryker-mutator/core": "8.7.1",
+    "@stryker-mutator/typescript-checker": "8.7.1",
+    "@stryker-mutator/vitest-runner": "8.7.1",
     "@types/node": "^20.10.5",
+    "@vitest/coverage-v8": "^1.2.2",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
     "vitest": "^1.2.2"
