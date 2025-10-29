@@ -6,7 +6,18 @@
 </p>
 
 [![npm version](https://img.shields.io/npm/v/@syntrojs/logger.svg)](https://www.npmjs.com/package/@syntrojs/logger)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/Syntropysoft/sintrojs-logger/blob/main/LICENSE)
 [![🚀 DUAL RUNTIME](https://img.shields.io/badge/🚀-DUAL%20RUNTIME-red.svg)](https://github.com/Syntropysoft/sintrojs-logger)
+
+**Quality & Security:**
+
+[![CI](https://github.com/Syntropysoft/sintrojs-logger/workflows/CI/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Syntropysoft/sintrojs-logger/workflows/CodeQL/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/codeql.yml)
+[![Mutation Testing](https://github.com/Syntropysoft/sintrojs-logger/workflows/Mutation%20Testing/badge.svg)](https://github.com/Syntropysoft/sintrojs-logger/actions/workflows/mutation-testing.yml)
+[![Security](https://img.shields.io/badge/security-0%20vulnerabilities-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger/security)
+
+**Code Coverage:**
+
 [![Coverage](https://img.shields.io/badge/coverage-93.05%25-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger)
 [![Mutation Score](https://img.shields.io/badge/mutation%20score-54.47%25-orange.svg)](https://github.com/Syntropysoft/sintrojs-logger)
 [![Statements](https://img.shields.io/badge/statements-93.05%25-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger)
