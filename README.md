@@ -7,6 +7,12 @@
 
 [![npm version](https://img.shields.io/npm/v/@syntrojs/logger.svg)](https://www.npmjs.com/package/@syntrojs/logger)
 [![🚀 DUAL RUNTIME](https://img.shields.io/badge/🚀-DUAL%20RUNTIME-red.svg)](https://github.com/Syntropysoft/sintrojs-logger)
+[![Coverage](https://img.shields.io/badge/coverage-93.05%25-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger)
+[![Mutation Score](https://img.shields.io/badge/mutation%20score-54.47%25-orange.svg)](https://github.com/Syntropysoft/sintrojs-logger)
+[![Statements](https://img.shields.io/badge/statements-93.05%25-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger)
+[![Branches](https://img.shields.io/badge/branches-84.61%25-yellow.svg)](https://github.com/Syntropysoft/sintrojs-logger)
+[![Functions](https://img.shields.io/badge/functions-91.72%25-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger)
+[![Lines](https://img.shields.io/badge/lines-93.05%25-brightgreen.svg)](https://github.com/Syntropysoft/sintrojs-logger)
 
 ---
 
@@ -15,8 +21,9 @@
 **🚨 This is an ALPHA version and proof of concept. Do not use in production!**
 
 - ✅ **Core functionality works** - All transports, child loggers, and async context
+- ✅ **Well tested** - 93.05% code coverage, 54.47% mutation score
 - ⚠️ **API may change** - Breaking changes expected in future versions
-- ⚠️ **Not production-ready** - Missing tests, CI/CD, and stability improvements
+- ⚠️ **Not production-ready** - Missing CI/CD and stability improvements
 
 ---
 
