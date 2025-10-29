@@ -1,15 +1,107 @@
-[![@syntrojs/logger](https://raw.githubusercontent.com/Syntropysoft/sintrojs-logger/main/assets/beaconLog-2.png)](https://github.com/Syntropysoft/sintrojs-logger)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Syntropysoft/sintrojs/main/assets/beaconLog-2.png" alt="SyntroJS Logger Logo" width="170"/>
+  <h1 align="center">@syntrojs/logger 🔥</h1>
+  <p align="center"><b>Fast, simple, developer-friendly logger for Node.js & Bun</b></p>
+  <p align="center">⚡ <b>~75% of Pino's performance</b> | 🎨 <b>4 beautiful transports</b></p>
+</p>
 
-# @syntrojs/logger
+[![npm version](https://img.shields.io/npm/v/@syntrojs/logger.svg)](https://www.npmjs.com/package/@syntrojs/logger)
+[![🚀 DUAL RUNTIME](https://img.shields.io/badge/🚀-DUAL%20RUNTIME-red.svg)](https://github.com/Syntropysoft/sintrojs-logger)
 
-> ⚠️ **ALPHA VERSION** - This is a proof of concept. Use at your own risk.
-> We're actively developing tests, CI/CD, and more features.
+---
 
-🔥 **Standalone logger** - Fast, simple, and developer-friendly logger for Node.js and Bun
+## ⚠️ ALPHA VERSION
 
-**Works perfectly on its own** or seamlessly integrates with [SyntroJS](https://github.com/Syntropysoft/sintrojs).
+**🚨 This is an ALPHA version and proof of concept. Do not use in production!**
 
-## Features
+- ✅ **Core functionality works** - All transports, child loggers, and async context
+- ⚠️ **API may change** - Breaking changes expected in future versions
+- ⚠️ **Not production-ready** - Missing tests, CI/CD, and stability improvements
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install Logger
+
+```bash
+npm install @syntrojs/logger@alpha
+# or
+pnpm add @syntrojs/logger@alpha
+```
+
+### 2. Your First Logger (2 Lines!)
+
+```typescript
+import { createLogger } from '@syntrojs/logger';
+
+const logger = createLogger({ name: 'my-app' });
+logger.info('Hello, world!');
+```
+
+**That's it!** 🎉 You now have:
+- ✅ ISO timestamps
+- ✅ Structured logging
+- ✅ Multiple transports (JSON, Pretty, Compact, Classic)
+- ✅ High performance
+
+### 3. Use in Production
+
+```typescript
+const logger = createLogger({
+  name: 'my-api',
+  level: 'info',
+  transport: 'json' // Machine-readable JSON
+});
+
+logger.info({ method: 'GET', path: '/users' }, 'Request received');
+// Output: {"time":"2025-01-01T12:00:00.000Z","level":"info","message":"Request received","service":"my-api","method":"GET","path":"/users"}
+```
+
+### 4. Use in Development
+
+```typescript
+const logger = createLogger({
+  name: 'dev-server',
+  level: 'debug',
+  transport: 'pretty' // Beautiful colored output
+});
+
+logger.info({ userId: 123, action: 'login' }, 'User logged in');
+```
+
+**Output:**
+```
+[2025-01-01T12:00:00.000Z] [INFO] (dev-server): User logged in
+{
+  "userId": 123,
+  "action": "login"
+}
+```
+
+---
+
+## 🎯 What is @syntrojs/logger?
+
+**Fast, simple, developer-friendly logger** with beautiful output and blazing performance.
+
+**🔥 Works Standalone:**
+```bash
+# Use in ANY Node.js or Bun project
+import { createLogger } from '@syntrojs/logger';
+```
+
+**🤝 Integrates with SyntroJS:**
+```bash
+# Automatically configured with correlation IDs and context
+import { createLogger } from 'syntrojs/logger';
+```
+
+**Zero dependencies** (except strace for colors) - **Maximum performance** - **Beautiful output**
+
+---
+
+## 📦 Features
 
 - ⚡ **Blazing fast** - Optimized for performance (~75% of Pino's speed, 1M+ ops/sec)
 - 🎨 **Beautiful output** - Four transport options: JSON, Pretty, Compact, and Classic
