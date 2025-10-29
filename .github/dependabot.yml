@@ -1,0 +1,36 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Syntropysoft"
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    # Group all dependency updates together
+    groups:
+      dev-dependencies:
+        patterns:
+          - "@*"
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Ignore major version updates for these packages (review manually)
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@stryker-mutator/*"
+        update-types: ["version-update:semver-major"]
+
