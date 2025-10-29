@@ -1,5 +1,7 @@
 # Instance Registry Pattern - Proposal
 
+**Package Name:** `@syntrojs/singleton`
+
 ## Concept
 
 Un singleton centralizado que permite:
@@ -12,7 +14,7 @@ Un singleton centralizado que permite:
 
 ```typescript
 // Setup al inicio (main.ts o bootstrap)
-import { getInstanceRegistry } from '@syntrojs/logger/registry';
+import { getInstanceRegistry } from '@syntrojs/singleton';
 import Redis from 'redis';
 import axios from 'axios';
 import { Kafka } from 'kafkajs';
@@ -149,8 +151,8 @@ const payments = registry.get('paymentApi'); // AxiosInstance
 ## Integration with Logger
 
 ```typescript
-// Logger puede usar el registry internamente
-import { getInstanceRegistry } from '@syntrojs/logger/registry';
+// Logger puede usar el singleton internamente
+import { getInstanceRegistry } from '@syntrojs/singleton';
 
 const logger = createLogger({ 
   name: 'my-service',
@@ -169,9 +171,18 @@ const logger = createLogger({
 4. **Auto-recovery** - Reconectar automáticamente si falla
 5. **Configuration Validation** - Validar configuración al registrar
 
+## Package Structure
+
+**Package:** `@syntrojs/singleton` (paquete separado, independiente del logger)
+
+**Benefits:**
+- ✅ Puede ser usado con o sin el logger
+- ✅ Reutilizable en cualquier proyecto
+- ✅ Nombre claro y descriptivo
+
 ## Open Questions
 
-1. ¿Debería ser parte del logger o un paquete separado `@syntrojs/registry`?
+1. ✅ **Decidido:** Será un paquete separado `@syntrojs/singleton`
 2. ¿Soporte para async initialization (ej. Redis.connect())?
 3. ¿Soporte para lazy loading de instancias?
 4. ¿Integración con dependency injection frameworks?
