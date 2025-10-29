@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { createLogger, type LogRetentionRules } from '../src/index';
-import { JsonTransport } from '../src/transports/json';
+import { ArrayTransport } from '../src/transports/array';
 
 describe('Fluent API', () => {
   describe('withSource()', () => {
@@ -16,25 +16,15 @@ describe('Fluent API', () => {
       expect(childLogger.name).toBe(parentLogger.name);
     });
 
-    it('should include source in log output', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      // Access private buffer to capture logs
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should include source in log output', () => {
+      const transport = new ArrayTransport();
       const logger = createLogger({ name: 'test', transport });
       const sourceLogger = logger.withSource('api');
 
       sourceLogger.info('Test message');
-      await logger.close(); // Flush buffer
 
-      expect(logs.length).toBeGreaterThan(0);
-      const logEntry = JSON.parse(logs[0]);
-      expect(logEntry.source).toBe('api');
+      const logEntry = transport.getLastEntry();
+      expect(logEntry?.source).toBe('api');
     });
 
     it('should allow chaining', () => {
@@ -54,24 +44,15 @@ describe('Fluent API', () => {
       expect(childLogger.name).toBe(parentLogger.name);
     });
 
-    it('should include transactionId in log output', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should include transactionId in log output', () => {
+      const transport = new ArrayTransport();
       const logger = createLogger({ name: 'test', transport });
       const txLogger = logger.withTransactionId('tx-xyz-789');
 
       txLogger.info('Test message');
-      await logger.close();
 
-      expect(logs.length).toBeGreaterThan(0);
-      const logEntry = JSON.parse(logs[0]);
-      expect(logEntry.transactionId).toBe('tx-xyz-789');
+      const logEntry = transport.getLastEntry();
+      expect(logEntry?.transactionId).toBe('tx-xyz-789');
     });
 
     it('should allow chaining with other fluent methods', () => {
@@ -97,15 +78,8 @@ describe('Fluent API', () => {
       expect(childLogger.name).toBe(parentLogger.name);
     });
 
-    it('should include retention rules in log output', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should include retention rules in log output', () => {
+      const transport = new ArrayTransport();
       const logger = createLogger({ name: 'test', transport });
       const rules: LogRetentionRules = {
         ttl: 3600,
@@ -116,26 +90,17 @@ describe('Fluent API', () => {
       const retentionLogger = logger.withRetention(rules);
 
       retentionLogger.info('Test message');
-      await logger.close();
 
-      expect(logs.length).toBeGreaterThan(0);
-      const logEntry = JSON.parse(logs[0]);
-      expect(logEntry.retention).toBeDefined();
-      expect(logEntry.retention.ttl).toBe(3600);
-      expect(logEntry.retention.maxEntries).toBe(10000);
-      expect(logEntry.retention.archiveAfter).toBe(259200);
-      expect(logEntry.retention.deleteAfter).toBe(2592000);
+      const logEntry = transport.getLastEntry();
+      expect(logEntry?.retention).toBeDefined();
+      expect(logEntry?.retention.ttl).toBe(3600);
+      expect(logEntry?.retention.maxEntries).toBe(10000);
+      expect(logEntry?.retention.archiveAfter).toBe(259200);
+      expect(logEntry?.retention.deleteAfter).toBe(2592000);
     });
 
-    it('should support custom retention rule properties', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should support custom retention rule properties', () => {
+      const transport = new ArrayTransport();
       const logger = createLogger({ name: 'test', transport });
       const rules: LogRetentionRules = {
         ttl: 3600,
@@ -145,23 +110,14 @@ describe('Fluent API', () => {
       const retentionLogger = logger.withRetention(rules);
 
       retentionLogger.info('Test message');
-      await logger.close();
 
-      expect(logs.length).toBeGreaterThan(0);
-      const logEntry = JSON.parse(logs[0]);
-      expect(logEntry.retention.customRule).toBe('custom-value');
-      expect(logEntry.retention.customNumber).toBe(42);
+      const logEntry = transport.getLastEntry();
+      expect(logEntry?.retention.customRule).toBe('custom-value');
+      expect(logEntry?.retention.customNumber).toBe(42);
     });
 
-    it('should support string values for retention rules (policy codes)', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should support string values for retention rules (policy codes)', () => {
+      const transport = new ArrayTransport();
       const logger = createLogger({ name: 'test', transport });
       const rules: LogRetentionRules = {
         ttl: '30-days',
@@ -172,25 +128,16 @@ describe('Fluent API', () => {
       const retentionLogger = logger.withRetention(rules);
 
       retentionLogger.info('Test message');
-      await logger.close();
 
-      expect(logs.length).toBeGreaterThan(0);
-      const logEntry = JSON.parse(logs[0]);
-      expect(logEntry.retention.ttl).toBe('30-days');
-      expect(logEntry.retention.policy).toBe('BANK-RET-2024-A');
-      expect(logEntry.retention.compliance).toBe('Basel-III');
-      expect(logEntry.retention.retentionPeriod).toBe('7-years');
+      const logEntry = transport.getLastEntry();
+      expect(logEntry?.retention.ttl).toBe('30-days');
+      expect(logEntry?.retention.policy).toBe('BANK-RET-2024-A');
+      expect(logEntry?.retention.compliance).toBe('Basel-III');
+      expect(logEntry?.retention.retentionPeriod).toBe('7-years');
     });
 
-    it('should support mixed numeric and string values', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should support mixed numeric and string values', () => {
+      const transport = new ArrayTransport();
       const logger = createLogger({ name: 'test', transport });
       const rules: LogRetentionRules = {
         ttl: 'HIPAA-compliant-7years',
@@ -201,14 +148,12 @@ describe('Fluent API', () => {
       const retentionLogger = logger.withRetention(rules);
 
       retentionLogger.info('Test message');
-      await logger.close();
 
-      expect(logs.length).toBeGreaterThan(0);
-      const logEntry = JSON.parse(logs[0]);
-      expect(logEntry.retention.ttl).toBe('HIPAA-compliant-7years');
-      expect(logEntry.retention.maxSize).toBe(1024000000);
-      expect(logEntry.retention.encryption).toBe('AES-256');
-      expect(logEntry.retention.retentionPeriod).toBe('7-years');
+      const logEntry = transport.getLastEntry();
+      expect(logEntry?.retention.ttl).toBe('HIPAA-compliant-7years');
+      expect(logEntry?.retention.maxSize).toBe(1024000000);
+      expect(logEntry?.retention.encryption).toBe('AES-256');
+      expect(logEntry?.retention.retentionPeriod).toBe('7-years');
     });
 
     it('should allow chaining with other fluent methods', () => {
@@ -224,15 +169,8 @@ describe('Fluent API', () => {
   });
 
   describe('Method Chaining', () => {
-    it('should allow chaining all fluent methods together', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should allow chaining all fluent methods together', () => {
+      const transport = new ArrayTransport();
       const logger = createLogger({ name: 'test', transport });
       const rules: LogRetentionRules = {
         ttl: 7200,
@@ -245,16 +183,14 @@ describe('Fluent API', () => {
         .withRetention(rules);
 
       fullLogger.info({ amount: 100.0 }, 'Payment processed');
-      await logger.close();
 
-      expect(logs.length).toBeGreaterThan(0);
-      const logEntry = JSON.parse(logs[0]);
-      expect(logEntry.source).toBe('payment-service');
-      expect(logEntry.transactionId).toBe('tx-payment-123');
-      expect(logEntry.retention).toBeDefined();
-      expect(logEntry.retention.ttl).toBe(7200);
-      expect(logEntry.amount).toBe(100.0);
-      expect(logEntry.message).toBe('Payment processed');
+      const logEntry = transport.getLastEntry();
+      expect(logEntry?.source).toBe('payment-service');
+      expect(logEntry?.transactionId).toBe('tx-payment-123');
+      expect(logEntry?.retention).toBeDefined();
+      expect(logEntry?.retention.ttl).toBe(7200);
+      expect(logEntry?.amount).toBe(100.0);
+      expect(logEntry?.message).toBe('Payment processed');
     });
 
     it('should preserve parent logger settings when chaining', () => {
@@ -284,15 +220,8 @@ describe('Fluent API', () => {
   });
 
   describe('Immutable Behavior', () => {
-    it('should not modify parent logger when using fluent methods', async () => {
-      const logs: string[] = [];
-      const transport = new JsonTransport({ bufferSize: 1 });
-      const originalLog = transport.log.bind(transport);
-      transport.log = (entry: string) => {
-        logs.push(entry);
-        originalLog(entry);
-      };
-
+    it('should not modify parent logger when using fluent methods', () => {
+      const transport = new ArrayTransport();
       const parentLogger = createLogger({ name: 'parent', transport });
       const childLogger = parentLogger.withSource('child');
 
@@ -300,11 +229,10 @@ describe('Fluent API', () => {
       parentLogger.info('Parent log');
       // Log with child - should HAVE source
       childLogger.info('Child log');
-      await parentLogger.close();
 
-      expect(logs.length).toBe(2);
-      const parentLog = JSON.parse(logs[0]);
-      const childLog = JSON.parse(logs[1]);
+      expect(transport.entries.length).toBe(2);
+      const parentLog = transport.getParsedEntries()[0];
+      const childLog = transport.getParsedEntries()[1];
 
       expect(parentLog.source).toBeUndefined();
       expect(childLog.source).toBe('child');
