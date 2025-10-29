@@ -40,7 +40,11 @@ export class PrettyTransport extends Transport {
     const colorizer = this.levelColorMap[level as Exclude<LogLevel, 'silent'>] || chalk.white;
     
     // timestamp can be number (Date.now()) or string (ISO)
-    const timeStr = chalk.gray(`[${new Date(timestamp).toISOString()}]`);
+    // Guard clause: Handle invalid timestamps
+    const date = timestamp ? new Date(timestamp) : new Date();
+    const timeStr = isNaN(date.getTime()) 
+      ? chalk.gray(`[${new Date().toISOString()}]`)
+      : chalk.gray(`[${date.toISOString()}]`);
     const levelString = colorizer(`[${level.toUpperCase()}]`);
     const serviceString = service ? chalk.cyan(`(${service})`) : '';
     

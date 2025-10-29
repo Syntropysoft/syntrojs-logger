@@ -16,7 +16,7 @@ export class SanitizationEngine {
   /** @private This regex matches ANSI escape codes used for colors, cursor movement, etc. */
   // prettier-ignore
   // eslint-disable-next-line no-control-regex
-  private readonly ansiRegex = /[\x1b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+  private readonly ansiRegex = /[\x1b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]|[\x1b\u009b]/g;
 
   /**
    * @constructor

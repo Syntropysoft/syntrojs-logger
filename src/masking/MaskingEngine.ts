@@ -194,7 +194,7 @@ export class MaskingEngine {
       {
         pattern: /credit_card|card_number|payment_number/i,
         strategy: MaskingStrategy.CREDIT_CARD,
-        preserveLength: true,
+        preserveLength: false, // Use fixed format for default rule
         maskChar: this.maskChar
       },
       {

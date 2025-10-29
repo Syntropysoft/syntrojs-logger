@@ -9,9 +9,8 @@
 
 /**
  * Type guard: Check if value is a plain object (not a class instance).
- * @private
  */
-function isPlainObject(value: unknown): value is Record<string, unknown> {
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (value === null || typeof value !== 'object') {
     return false;
   }
@@ -22,9 +21,8 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 /**
  * Type guard: Check if value is a valid JSON primitive.
- * @private
  */
-function isValidJsonPrimitive(value: unknown): boolean {
+export function isValidJsonPrimitive(value: unknown): boolean {
   // Guard clause: Valid primitives
   if (value === null) return true;
   if (typeof value === 'string') return true;
@@ -102,26 +100,58 @@ export function validatePlainJson(
 
 /**
  * Validates and sanitizes JSON configuration.
- * Returns a safe copy of the data (immutable).
+ * Returns a safe copy of the data with invalid properties removed (immutable).
  * 
- * @param data - Configuration data to validate
- * @returns Safe copy of the data (throws if invalid)
- * @throws Error if data contains non-JSON values
+ * @param data - Configuration data to sanitize
+ * @returns Safe copy of the data with invalid properties removed
  * 
  * @example
  * ```typescript
- * try {
- *   const safeConfig = validateAndSanitizeJson(externalConfig);
- *   // Use safeConfig...
- * } catch (error) {
- *   console.error('Invalid configuration:', error);
- * }
+ * const safeConfig = validateAndSanitizeJson(externalConfig);
+ * // SafeConfig will have all invalid properties (functions, classes) removed
  * ```
  */
 export function validateAndSanitizeJson(data: unknown): unknown {
-  // Validate first (throws if invalid)
-  validatePlainJson(data);
-  
-  // Return deep copy (immutable)
-  return JSON.parse(JSON.stringify(data));
+  // Guard clause: Primitives are safe as-is
+  if (isValidJsonPrimitive(data)) {
+    return data;
+  }
+
+  // Guard clause: Arrays - filter invalid elements (functional approach)
+  if (Array.isArray(data)) {
+    return data
+      .map(item => {
+        // Check if item is invalid before sanitizing
+        if (typeof item === 'function') return undefined; // Mark for removal
+        if (typeof item === 'object' && item !== null && item.constructor !== Object && !Array.isArray(item)) {
+          return undefined; // Mark for removal
+        }
+        if (item === undefined) return undefined; // Mark for removal
+        // Sanitize valid items (including null)
+        return validateAndSanitizeJson(item);
+      })
+      .filter(item => item !== undefined); // Remove invalid items, keep null if it was originally null
+  }
+
+  // Guard clause: Plain objects - recursively sanitize (functional approach)
+  if (isPlainObject(data)) {
+    return Object.keys(data)
+      .filter(key => {
+        const value = data[key];
+        // Filter out invalid values
+        if (typeof value === 'function') return false;
+        if (typeof value === 'object' && value !== null && value.constructor !== Object && !Array.isArray(value)) {
+          return false;
+        }
+        if (value === undefined) return false;
+        return true;
+      })
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = validateAndSanitizeJson(data[key]);
+        return acc;
+      }, {});
+  }
+
+  // Invalid type - return null (safe default)
+  return null;
 }

@@ -87,9 +87,10 @@ class LoggerRegistry {
 
   /**
    * Get all loggers (for testing/debugging)
+   * Returns an object with logger names as keys (functional approach)
    */
-  getAllLoggers(): Map<string, Logger> {
-    return new Map(this.loggers);
+  getAllLoggers(): Record<string, Logger> {
+    return Object.fromEntries(this.loggers.entries());
   }
 }
 

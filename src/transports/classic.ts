@@ -35,9 +35,20 @@ export class ClassicTransport extends Transport {
     };
   }
 
-private formatTimestamp(ts: string | number): string {
+private formatTimestamp(ts: string | number | undefined): string {
+    // Guard clause: Handle undefined or invalid timestamps
+    if (ts === undefined) {
+      return `[${new Date().toISOString()}]`;
+    }
+    
+    // Guard clause: Validate timestamp before formatting
+    const date = new Date(ts);
+    if (isNaN(date.getTime())) {
+      return `[${new Date().toISOString()}]`; // Fallback to current time
+    }
+    
     // Convert to ISO string format with brackets
-    return `[${new Date(ts).toISOString()}]`;
+    return `[${date.toISOString()}]`;
 }
   
   log(entry: LogEntry | string): void {
@@ -53,7 +64,7 @@ private formatTimestamp(ts: string | number): string {
     }
 
     const timestamp = (logEntry as any).time || logEntry.timestamp;
-    const { level, service, message, time: _, timestamp: __, ...rest } = logEntry;
+    const { level, service = 'app', message, time: _, timestamp: __, ...rest } = logEntry;
 
     const colorizer = this.levelColorMap[level as Exclude<LogLevel, 'silent'>] || chalk.white;
 
