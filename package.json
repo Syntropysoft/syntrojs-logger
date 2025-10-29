@@ -28,9 +28,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
-    "benchmark": "node benchmark.js",
-    "benchmark:bun": "bun benchmark.js",
-    "benchmark:compare": "node compare-benchmarks.js",
+    "benchmark": "node scripts/benchmarks/benchmark.js",
+    "benchmark:bun": "bun scripts/benchmarks/benchmark.js",
+    "benchmark:compare": "node scripts/benchmarks/compare-benchmarks.js",
     "lint": "biome check src tests",
     "lint:fix": "biome check --write src tests",
     "format": "biome format --write ."

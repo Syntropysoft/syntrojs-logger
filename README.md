@@ -967,7 +967,7 @@ const logger = createLogger({
 });
 ```
 
-See [CUSTOM_TRANSPORTS.md](./CUSTOM_TRANSPORTS.md) for more examples including OpenTelemetry, databases, and message queues.
+See [CUSTOM_TRANSPORTS.md](./docs/CUSTOM_TRANSPORTS.md) for more examples including OpenTelemetry, databases, and message queues.
 
 ## License
 
