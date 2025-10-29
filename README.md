@@ -28,6 +28,30 @@
 
 ---
 
+## 📦 Two Ways to Use the Logger
+
+**Standalone (Independent Instances):**
+```typescript
+import { createLogger } from '@syntrojs/logger';
+
+const logger = createLogger({ name: 'my-app' });
+logger.info('Hello, world!');
+```
+
+**Singleton Pattern (Shared Instance):**
+```typescript
+import { getLogger } from '@syntrojs/logger/registry';
+
+// First call: creates and caches
+const logger = getLogger('my-app');
+logger.info('Hello, world!');
+
+// Later, anywhere: same instance
+const sameLogger = getLogger('my-app'); // Same instance!
+```
+
+---
+
 ## ⚠️ ALPHA VERSION
 
 **🚨 This is an ALPHA version and proof of concept. Do not use in production!**
@@ -58,11 +82,20 @@ const logger = createLogger({ name: 'my-app' });
 logger.info('Hello, world!');
 ```
 
+**Or use singleton pattern:**
+```typescript
+import { getLogger } from '@syntrojs/logger/registry';
+
+const logger = getLogger('my-app');
+logger.info('Hello, world!');
+```
+
 **That's it!** 🎉 You now have:
 - ✅ ISO timestamps
 - ✅ Structured logging
 - ✅ Multiple transports (JSON, Pretty, Compact, Classic)
 - ✅ High performance
+- ✅ Singleton pattern support
 
 ### 3. Use in Production
 
@@ -754,6 +787,45 @@ getLogger('analytics-service')
 - **Type Safety**: TypeScript ensures correct logger usage and metadata structure
 
 ## API
+
+### Logger Creation
+
+#### `createLogger(options)`
+
+Creates a **new, independent logger instance** each time it's called.
+
+```typescript
+import { createLogger } from '@syntrojs/logger';
+
+const logger1 = createLogger({ name: 'app' });
+const logger2 = createLogger({ name: 'app' });
+// logger1 !== logger2 (different instances)
+```
+
+#### `getLogger(name, options?)` - Singleton Pattern
+
+Gets or creates a **shared logger instance** using the registry pattern. Returns the same instance for the same name.
+
+```typescript
+import { getLogger } from '@syntrojs/logger/registry';
+
+// First call: creates and caches the logger
+const logger1 = getLogger('database');
+logger1.info('Query executed');
+
+// Second call (anywhere in your app): returns same cached instance
+const logger2 = getLogger('database');
+logger2.info('Another query');
+// logger1 === logger2 (same instance!)
+
+// With custom options (only on first call - ignored on subsequent calls)
+const apiLogger = getLogger('api', { level: 'debug', transport: 'json' });
+const sameApiLogger = getLogger('api', { level: 'warn' }); // Options ignored, returns cached instance
+```
+
+**When to use:**
+- **`createLogger()`**: When you need independent logger instances
+- **`getLogger()`**: When you want singleton pattern (shared instance across your app)
 
 ### `createLogger(options)`
 
