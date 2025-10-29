@@ -62,7 +62,7 @@
     "safe-regex": "^2.1.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.5.3",
+    "@biomejs/biome": "^2.3.2",
     "@stryker-mutator/core": "8.7.1",
     "@stryker-mutator/typescript-checker": "8.7.1",
     "@stryker-mutator/vitest-runner": "8.7.1",
