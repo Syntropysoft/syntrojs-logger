@@ -5,7 +5,7 @@
  * Or with: bun benchmark.js
  */
 
-import { createLogger } from './dist/index.js';
+import { createLogger } from '../../dist/index.js';
 import { Writable } from 'node:stream';
 
 // Create a discard stream for silencing stdout during benchmarks

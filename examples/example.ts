@@ -2,7 +2,7 @@
  * Example usage of @syntrojs/logger
  */
 
-import { createLogger } from './src/index';
+import { createLogger } from '../dist/index.js';
 
 // Basic usage
 const logger = createLogger({ name: 'example-app', level: 'debug' });
