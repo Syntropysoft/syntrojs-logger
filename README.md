@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Syntropysoft/sintrojs-logger/main/assets/syntropylog-logo.png" alt="SyntroJS Logger Logo" width="170"/>
+  <img src="https://raw.githubusercontent.com/Syntropysoft/syntrojs-logger/refs/heads/main/assets/beaconLog-2.png" alt="SyntroJS Logger Logo" width="170"/>
   <h1 align="center">@syntrojs/logger 🔥</h1>
   <p align="center"><b>Fast, simple, developer-friendly logger for Node.js & Bun</b></p>
   <p align="center">⚡ <b>~75% of Pino's performance</b> | 🎨 <b>4 beautiful transports</b></p>

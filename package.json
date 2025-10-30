@@ -1,6 +1,6 @@
 {
   "name": "@syntrojs/logger",
-  "version": "0.2.1-alpha",
+  "version": "0.2.3-alpha",
   "description": "🔥 Fast, simple, and developer-friendly logger for Node.js and Bun (ALPHA - Proof of Concept)",
   "type": "module",
   "main": "./dist/index.js",
